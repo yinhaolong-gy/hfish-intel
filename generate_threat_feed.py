@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HFish 威胁情报自动化生成脚本 v3.0
-功能：攻击数据采集 + 弱口令字典 + 趋势图 + 自动化发布
+HFish 威胁情报自动化生成脚本 v4.0
+功能：全蜜罐数据采集 + 弱口令字典 + 趋势图 + 分蜜罐统计 + 自动化发布
 """
 
 import requests
@@ -25,57 +25,49 @@ START_TIME = END_TIME - timedelta(days=90)
 OUTPUT_DIR = "./docs"
 OUTPUT_FILE = "index.html"
 
-# ==================== 1. 调用 HFish 攻击 API ====================
+# ==================== 1. 攻击数据 API ====================
 def fetch_attack_logs():
     url = f"{HFISH_BASE_URL}/api/v1/attack/detail"
     headers = {"Content-Type": "application/json"}
     params = {"api_key": API_KEY}
-    start_timestamp = int(START_TIME.timestamp())
-    end_timestamp = int(END_TIME.timestamp())
-    payload = {
-        "start_time": start_timestamp,
-        "end_time": end_timestamp,
-        "page": 1,
-        "page_size": 5000
-    }
+    start_ts = int(START_TIME.timestamp())
+    end_ts = int(END_TIME.timestamp())
+    payload = {"start_time": start_ts, "end_time": end_ts, "page": 1, "page_size": 5000}
     try:
-        response = requests.post(url, headers=headers, params=params, json=payload, verify=False, timeout=30)
-        response.raise_for_status()
-        data = response.json()
+        r = requests.post(url, headers=headers, params=params, json=payload, verify=False, timeout=30)
+        r.raise_for_status()
+        data = r.json()
         if data.get("response_code") == 0:
             return data.get("data", [])
-        else:
-            print(f"攻击API错误: {data.get('verbose_msg')}")
-            return []
     except Exception as e:
-        print(f"攻击API请求失败: {e}")
-        return []
+        print(f"攻击API失败: {e}")
+    return []
 
-# ==================== 2. 调用 HFish 账号资产 API ====================
+# ==================== 2. 账号资产 API ====================
 def fetch_accounts():
     url = f"{HFISH_BASE_URL}/api/v1/attack/account"
     headers = {"Content-Type": "application/json"}
     params = {"api_key": API_KEY}
     payload = {"page": 1, "page_size": 5000}
     try:
-        response = requests.post(url, headers=headers, params=params, json=payload, verify=False, timeout=30)
-        data = response.json()
+        r = requests.post(url, headers=headers, params=params, json=payload, verify=False, timeout=30)
+        data = r.json()
         if data.get("response_code") == 0:
             return data.get("data", [])
     except Exception as e:
-        print(f"账号API请求失败: {e}")
+        print(f"账号API失败: {e}")
     return []
 
-# ==================== 3. 弱口令 TOP 10 统计 ====================
+# ==================== 3. 弱口令统计 ====================
 def get_top_passwords(accounts):
-    passwords = [a.get("password", "") for a in accounts if a.get("password")]
-    return Counter(passwords).most_common(10)
+    pws = [a.get("password", "") for a in accounts if a.get("password")]
+    return Counter(pws).most_common(10)
 
 def get_top_usernames(accounts):
-    usernames = [a.get("username", "") for a in accounts if a.get("username")]
-    return Counter(usernames).most_common(5)
+    uns = [a.get("username", "") for a in accounts if a.get("username")]
+    return Counter(uns).most_common(5)
 
-# ==================== 4. 数据清洗与聚合 ====================
+# ==================== 4. 数据清洗 ====================
 def process_data(raw_logs):
     if not raw_logs:
         return pd.DataFrame(), {}
@@ -88,25 +80,36 @@ def process_data(raw_logs):
         "service_port": "端口",
         "create_time": "攻击时间"
     }
-    available_columns = [col for col in column_mapping.keys() if col in df.columns]
-    df = df[available_columns].copy()
+    cols = [c for c in column_mapping if c in df.columns]
+    df = df[cols].copy()
     df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns}, inplace=True)
+
     if "攻击时间" in df.columns:
         df["攻击时间"] = pd.to_datetime(df["攻击时间"], unit='s').dt.strftime("%Y-%m-%d %H:%M")
     if "地理位置" in df.columns:
         df["国家"] = df["地理位置"].apply(lambda x: x.split("-")[0] if isinstance(x, str) and "-" in x else x)
+
+    # 所有10种蜜罐的服务名称
+    all_honeypots = ["SSH蜜罐", "TCP端口监听", "Elasticsearch蜜罐", "Telnet蜜罐",
+                     "FTP蜜罐", "HTTP代理蜜罐", "MYSQL蜜罐", "REDIS蜜罐",
+                     "Tomcat蜜罐", "Weblogic蜜罐"]
+    honeypot_counts = df["服务类型"].value_counts().to_dict() if "服务类型" in df.columns else {}
+    honeypot_data = {hp: honeypot_counts.get(hp, 0) for hp in all_honeypots}
+
     stats = {
         "total_attacks": len(df),
         "unique_ips": df["攻击源IP"].nunique() if "攻击源IP" in df.columns else 0,
         "top_ips": df["攻击源IP"].value_counts().head(10).to_dict() if "攻击源IP" in df.columns else {},
         "top_services": df["服务类型"].value_counts().head(10).to_dict() if "服务类型" in df.columns else {},
         "top_countries": df["国家"].value_counts().head(10).to_dict() if "国家" in df.columns else {},
+        "honeypot_data": honeypot_data,
+        "active_honeypots": sum(1 for v in honeypot_data.values() if v > 0),
         "time_range": f"{START_TIME.strftime('%Y-%m-%d %H:%M')} ~ {END_TIME.strftime('%Y-%m-%d %H:%M')}"
     }
     return df, stats
 
 # ==================== 5. HTML 模板 ====================
-HTML_TEMPLATE = """
+HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -125,32 +128,40 @@ HTML_TEMPLATE = """
         .header { text-align: center; color: #00d4ff; margin-bottom: 30px; }
         .header h1 { font-size: 2.5em; text-shadow: 0 0 20px rgba(0,212,255,0.5); }
         .header .update-time { opacity: 0.8; font-size: 0.9em; color: #ccc; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .stat-card {
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 25px;
+            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 20px;
             text-align: center; transition: transform 0.3s;
         }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-number { font-size: 2.5em; font-weight: bold; color: #00d4ff; }
-        .stat-label { color: #ccc; margin-top: 10px; }
+        .stat-card:hover { transform: translateY(-5px); border-color: #00d4ff; }
+        .stat-number { font-size: 2.2em; font-weight: bold; color: #00d4ff; }
+        .stat-label { color: #ccc; margin-top: 8px; font-size: 0.9em; }
         .section {
             background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,212,255,0.2); border-radius: 15px; padding: 25px; margin-bottom: 30px;
+            border: 1px solid rgba(0,212,255,0.2); border-radius: 15px; padding: 25px; margin-bottom: 25px;
         }
-        .section-title { font-size: 1.5em; color: #00d4ff; margin-bottom: 20px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
-        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .section-title { font-size: 1.4em; color: #00d4ff; margin-bottom: 20px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
+        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
         .list-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; }
-        .list-item h3 { color: #00d4ff; margin-bottom: 15px; }
-        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: #ddd; }
+        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; }
+        .rank-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ddd; font-size: 0.9em; }
         .rank-value { font-weight: bold; color: #00d4ff; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; color: #ddd; }
-        .data-table th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 12px; text-align: left; }
-        .data-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        .hp-item {
+            background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 10px; padding: 15px; text-align: center;
+        }
+        .hp-name { color: #aaa; font-size: 0.8em; margin-bottom: 5px; }
+        .hp-count { color: #00d4ff; font-size: 1.5em; font-weight: bold; }
+        .hp-zero { color: #666; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; color: #ddd; }
+        .data-table th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 10px; text-align: left; }
+        .data-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .data-table tr:hover { background: rgba(0,212,255,0.05); }
-        .badge { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 4px 10px; border-radius: 20px; font-size: 0.85em; }
-        .footer { text-align: center; color: #888; margin-top: 40px; }
-        .chart-container { max-width: 100%; height: 400px; }
+        .badge { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 3px 8px; border-radius: 15px; font-size: 0.8em; }
+        .footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.85em; }
+        .chart-container { max-width: 100%; height: 350px; }
         .warning { color: #ff6b6b; }
     </style>
 </head>
@@ -161,13 +172,14 @@ HTML_TEMPLATE = """
             <p class="update-time">{{ stats.time_range }} | 最后更新: {{ last_update }}</p>
         </div>
 
-        <!-- 统计卡片 -->
+        <!-- 总览卡片 -->
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-number">{{ stats.total_attacks }}</div><div class="stat-label">总攻击次数</div></div>
             <div class="stat-card"><div class="stat-number">{{ stats.unique_ips }}</div><div class="stat-label">独立攻击IP</div></div>
             <div class="stat-card"><div class="stat-number">{{ services_count }}</div><div class="stat-label">服务类型数</div></div>
             <div class="stat-card"><div class="stat-number">{{ countries_count }}</div><div class="stat-label">涉及国家/地区</div></div>
             <div class="stat-card"><div class="stat-number">{{ account_count }}</div><div class="stat-label">账号资产数据</div></div>
+            <div class="stat-card"><div class="stat-number">{{ stats.active_honeypots }}</div><div class="stat-label">活跃蜜罐数</div></div>
         </div>
 
         <!-- 攻击趋势图 -->
@@ -176,46 +188,50 @@ HTML_TEMPLATE = """
             <div class="chart-container"><canvas id="attackChart"></canvas></div>
         </div>
 
+        <!-- 分蜜罐统计 -->
+        <div class="section">
+            <h2 class="section-title">🎯 各蜜罐受攻击次数</h2>
+            <div class="honeypot-grid">
+                {% for name, count in stats.honeypot_data.items() %}
+                <div class="hp-item">
+                    <div class="hp-name">{{ name }}</div>
+                    <div class="hp-count {% if count == 0 %}hp-zero{% endif %}">{{ count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         <!-- 攻击统计分析 -->
         <div class="section">
             <h2 class="section-title">📊 攻击统计分析</h2>
             <div class="top-list">
                 <div class="list-item"><h3>🔝 Top 10 攻击源IP</h3>
                     {% for ip, count in stats.top_ips.items() %}
-                    <div class="rank-item"><span>{{ ip }}</span><span class="rank-value">{{ count }} 次</span></div>{% endfor %}
-                </div>
-                <div class="list-item"><h3>🎯 攻击服务类型</h3>
-                    {% for service, count in stats.top_services.items() %}
-                    <div class="rank-item"><span>{{ service }}</span><span class="rank-value">{{ count }} 次</span></div>{% endfor %}
-                </div>
+                    <div class="rank-item"><span>{{ ip }}</span><span class="rank-value">{{ count }}</span></div>{% endfor %}</div>
                 <div class="list-item"><h3>🌍 攻击来源国家</h3>
                     {% for country, count in stats.top_countries.items() %}
-                    <div class="rank-item"><span>{{ country }}</span><span class="rank-value">{{ count }} 次</span></div>{% endfor %}
-                </div>
+                    <div class="rank-item"><span>{{ country }}</span><span class="rank-value">{{ count }}</span></div>{% endfor %}</div>
                 <div class="list-item"><h3>🔑 弱口令字典 TOP 10</h3>
                     {% for pwd, count in top_passwords %}
-                    <div class="rank-item"><span class="warning">{{ pwd }}</span><span class="rank-value">{{ count }} 次</span></div>{% endfor %}
-                    {% if not top_passwords %}<div class="rank-item"><span>暂无数据，等待攻击者尝试登录</span></div>{% endif %}
-                </div>
+                    <div class="rank-item"><span class="warning">{{ pwd }}</span><span class="rank-value">{{ count }}</span></div>{% endfor %}
+                    {% if not top_passwords %}<div class="rank-item"><span>暂无弱口令数据</span></div>{% endif %}</div>
                 <div class="list-item"><h3>👤 高频用户名 TOP 5</h3>
                     {% for user, count in top_usernames %}
-                    <div class="rank-item"><span>{{ user }}</span><span class="rank-value">{{ count }} 次</span></div>{% endfor %}
-                    {% if not top_usernames %}<div class="rank-item"><span>暂无数据</span></div>{% endif %}
-                </div>
+                    <div class="rank-item"><span>{{ user }}</span><span class="rank-value">{{ count }}</span></div>{% endfor %}</div>
             </div>
         </div>
 
         <!-- 最新攻击详情 -->
         <div class="section">
             <h2 class="section-title">📋 最新攻击详情（前100条）</h2>
-            <div style="overflow-x:auto; max-height:500px; overflow-y:auto;">
-                <table class="data-table"><thead><tr><th>攻击源IP</th><th>地理位置</th><th>服务类型</th><th>端口</th><th>蜜罐节点</th><th>攻击时间</th></tr></thead><tbody>
+            <div style="overflow-x:auto; max-height:400px; overflow-y:auto;">
+                <table class="data-table"><thead><tr><th>攻击源IP</th><th>地理位置</th><th>服务类型</th><th>端口</th><th>攻击时间</th></tr></thead><tbody>
                     {% for _, row in df.head(100).iterrows() %}
-                    <tr><td><span class="badge">{{ row.get('攻击源IP', '-') }}</span></td><td>{{ row.get('地理位置', '-') }}</td><td>{{ row.get('服务类型', '-') }}</td><td>{{ row.get('端口', '-') }}</td><td>{{ row.get('蜜罐节点', '-') }}</td><td>{{ row.get('攻击时间', '-') }}</td></tr>{% endfor %}</tbody></table>
+                    <tr><td><span class="badge">{{ row.get('攻击源IP', '-') }}</span></td><td>{{ row.get('地理位置', '-') }}</td><td>{{ row.get('服务类型', '-') }}</td><td>{{ row.get('端口', '-') }}</td><td>{{ row.get('攻击时间', '-') }}</td></tr>{% endfor %}</tbody></table>
             </div>
         </div>
 
-        <div class="footer"><p>🤖 HFish 蜜罐自动采集 · 每6小时更新 · 毕业设计作品</p></div>
+        <div class="footer"><p>🤖 HFish 蜜罐自动采集 · 每6小时更新 · 毕业设计作品 · {{ last_update }}</p></div>
     </div>
 
     <script>
@@ -225,23 +241,12 @@ HTML_TEMPLATE = """
             type:'line', 
             data:{
                 labels:data.dates, 
-                datasets:[{
-                    label:'攻击次数',
-                    data:data.counts,
-                    borderColor:'#00d4ff',
-                    backgroundColor:'rgba(0,212,255,0.1)',
-                    fill:true,
-                    tension:0.3
-                }]
+                datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.3}]
             }, 
             options:{
-                responsive:true,
-                maintainAspectRatio:false,
+                responsive:true, maintainAspectRatio:false,
                 plugins:{legend:{labels:{color:'#ccc'}}},
-                scales:{
-                    x:{ticks:{color:'#ccc'}},
-                    y:{ticks:{color:'#ccc'}}
-                }
+                scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}
             }
         });
     </script>
@@ -249,14 +254,13 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# ==================== 6. 生成图表数据 ====================
+# ==================== 6. 图表数据 ====================
 def generate_chart_data(df):
     import json
     if "攻击时间" in df.columns and not df.empty:
         df["日期"] = pd.to_datetime(df["攻击时间"]).dt.strftime("%m-%d")
         daily = df["日期"].value_counts().sort_index()
-        chart_data = {"dates": daily.index.tolist()[-7:], "counts": daily.values.tolist()[-7:]}
-        return json.dumps(chart_data)
+        return json.dumps({"dates": daily.index.tolist()[-7:], "counts": daily.values.tolist()[-7:]})
     return json.dumps({"dates": [], "counts": []})
 
 # ==================== 7. 生成 HTML ====================
@@ -267,8 +271,7 @@ def generate_html(df, stats, accounts):
     top_usernames = get_top_usernames(accounts)
     html_content = template.render(
         df=df, stats=stats, chart_data=chart_data,
-        top_passwords=top_passwords,
-        top_usernames=top_usernames,
+        top_passwords=top_passwords, top_usernames=top_usernames,
         account_count=len(accounts),
         last_update=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         services_count=len(stats.get("top_services", {})),
@@ -282,21 +285,18 @@ def generate_html(df, stats, accounts):
 
 # ==================== 8. 主函数 ====================
 def main():
-    print("🔄 开始从 HFish 拉取攻击日志...")
-    raw_logs = fetch_attack_logs()
-    
-    print("🔄 拉取账号资产数据...")
+    print("🔄 拉取攻击日志...")
+    logs = fetch_attack_logs()
+    print("🔄 拉取账号资产...")
     accounts = fetch_accounts()
-    
-    if raw_logs:
-        print(f"📥 攻击数据: {len(raw_logs)} 条, 账号数据: {len(accounts)} 条")
-        df, stats = process_data(raw_logs)
-        print(f"📊 统计结果: 总攻击 {stats['total_attacks']} 次, 独立IP {stats['unique_ips']} 个")
-        print("🎨 正在生成 HTML 页面...")
+    if logs:
+        print(f"📥 攻击: {len(logs)} 条, 账号: {len(accounts)} 条")
+        df, stats = process_data(logs)
+        print(f"📊 总攻击 {stats['total_attacks']} 次, 独立IP {stats['unique_ips']} 个, 活跃蜜罐 {stats['active_honeypots']} 个")
         generate_html(df, stats, accounts)
-        print("✨ 所有任务完成！")
+        print("✨ 完成！")
     else:
-        print("⚠️ 未拉取到攻击数据")
+        print("⚠️ 无数据")
 
 if __name__ == "__main__":
     main()
