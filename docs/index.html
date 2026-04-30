@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFish 威胁情报源</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -14,67 +15,83 @@
             min-height: 100vh; padding: 20px;
         }
         .container { max-width: 1400px; margin: 0 auto; }
-        .header { text-align: center; color: #00d4ff; margin-bottom: 30px; }
+        .header { text-align: center; color: #00d4ff; margin-bottom: 25px; }
         .header h1 { font-size: 2.5em; text-shadow: 0 0 20px rgba(0,212,255,0.5); }
         .header .update-time { opacity: 0.8; font-size: 0.9em; color: #ccc; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .header .btn-download {
+            display: inline-block; margin-top: 10px; padding: 8px 20px;
+            background: rgba(0,212,255,0.2); color: #00d4ff;
+            border: 1px solid rgba(0,212,255,0.4); border-radius: 20px;
+            text-decoration: none; font-size: 0.9em; transition: all 0.3s;
+        }
+        .header .btn-download:hover { background: rgba(0,212,255,0.4); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 25px; }
         .stat-card {
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 20px;
+            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 18px;
             text-align: center; transition: transform 0.3s;
         }
-        .stat-card:hover { transform: translateY(-5px); border-color: #00d4ff; }
-        .stat-number { font-size: 2.2em; font-weight: bold; color: #00d4ff; }
-        .stat-label { color: #ccc; margin-top: 8px; font-size: 0.9em; }
+        .stat-card:hover { transform: translateY(-3px); border-color: #00d4ff; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #00d4ff; }
+        .stat-label { color: #ccc; margin-top: 6px; font-size: 0.85em; }
         .section {
             background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
             border: 1px solid rgba(0,212,255,0.2); border-radius: 15px; padding: 25px; margin-bottom: 25px;
         }
-        .section-title { font-size: 1.4em; color: #00d4ff; margin-bottom: 20px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
-        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .list-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; }
-        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; }
-        .rank-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ddd; font-size: 0.9em; }
-        .rank-value { font-weight: bold; color: #00d4ff; }
-        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        .section-title { font-size: 1.3em; color: #00d4ff; margin-bottom: 18px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
+        .chart-container { width: 100%; height: 350px; }
+        .map-container { width: 100%; height: 500px; }
+        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         .hp-item {
             background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
             border-radius: 10px; padding: 15px; text-align: center;
         }
-        .hp-name { color: #aaa; font-size: 0.8em; margin-bottom: 5px; }
-        .hp-count { color: #00d4ff; font-size: 1.5em; font-weight: bold; }
-        .hp-zero { color: #666; }
+        .hp-name { color: #aaa; font-size: 0.75em; margin-bottom: 5px; }
+        .hp-count { color: #00d4ff; font-size: 1.4em; font-weight: bold; }
+        .hp-zero { color: #555; }
+        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .list-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; }
+        .list-item h3 { color: #00d4ff; margin-bottom: 10px; font-size: 0.95em; }
+        .rank-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ddd; font-size: 0.85em; }
+        .rank-value { font-weight: bold; color: #00d4ff; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; color: #ddd; }
         .data-table th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 10px; text-align: left; }
         .data-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .data-table tr:hover { background: rgba(0,212,255,0.05); }
         .badge { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 3px 8px; border-radius: 15px; font-size: 0.8em; }
         .footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.85em; }
-        .chart-container { max-width: 100%; height: 350px; }
         .warning { color: #ff6b6b; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- 头部 -->
         <div class="header">
             <h1>🛡️ HFish 威胁情报源</h1>
-            <p class="update-time">2026-01-29 17:10 ~ 2026-04-29 17:10 | 最后更新: 2026-04-29 17:10:35</p>
+            <p class="update-time">2026-01-30 10:14 ~ 2026-04-30 10:14 | 最后更新: 2026-04-30 10:14:21</p>
+            <a class="btn-download" href="threat_data.csv" download>📥 下载CSV数据报告</a>
         </div>
 
         <!-- 总览卡片 -->
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number">1352</div><div class="stat-label">总攻击次数</div></div>
-            <div class="stat-card"><div class="stat-number">75</div><div class="stat-label">独立攻击IP</div></div>
-            <div class="stat-card"><div class="stat-number">5</div><div class="stat-label">服务类型数</div></div>
+            <div class="stat-card"><div class="stat-number">5000</div><div class="stat-label">总攻击次数</div></div>
+            <div class="stat-card"><div class="stat-number">203</div><div class="stat-label">独立攻击IP</div></div>
+            <div class="stat-card"><div class="stat-number">7</div><div class="stat-label">服务类型数</div></div>
             <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">涉及国家/地区</div></div>
-            <div class="stat-card"><div class="stat-number">984</div><div class="stat-label">账号资产数据</div></div>
-            <div class="stat-card"><div class="stat-number">5</div><div class="stat-label">活跃蜜罐数</div></div>
+            <div class="stat-card"><div class="stat-number">5429</div><div class="stat-label">账号资产数据</div></div>
+            <div class="stat-card"><div class="stat-number">7</div><div class="stat-label">活跃蜜罐数</div></div>
         </div>
 
         <!-- 攻击趋势图 -->
         <div class="section">
             <h2 class="section-title">📈 攻击趋势（近7天）</h2>
             <div class="chart-container"><canvas id="attackChart"></canvas></div>
+        </div>
+
+        <!-- 世界地图 -->
+        <div class="section">
+            <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
+            <div class="map-container" id="worldMap"></div>
         </div>
 
         <!-- 分蜜罐统计 -->
@@ -84,7 +101,7 @@
                 
                 <div class="hp-item">
                     <div class="hp-name">SSH蜜罐</div>
-                    <div class="hp-count ">980</div>
+                    <div class="hp-count ">3702</div>
                 </div>
                 
                 <div class="hp-item">
@@ -94,17 +111,17 @@
                 
                 <div class="hp-item">
                     <div class="hp-name">Elasticsearch蜜罐</div>
-                    <div class="hp-count ">7</div>
+                    <div class="hp-count ">508</div>
                 </div>
                 
                 <div class="hp-item">
                     <div class="hp-name">Telnet蜜罐</div>
-                    <div class="hp-count ">6</div>
+                    <div class="hp-count ">332</div>
                 </div>
                 
                 <div class="hp-item">
                     <div class="hp-name">FTP蜜罐</div>
-                    <div class="hp-count ">1</div>
+                    <div class="hp-count ">8</div>
                 </div>
                 
                 <div class="hp-item">
@@ -114,12 +131,12 @@
                 
                 <div class="hp-item">
                     <div class="hp-name">MYSQL蜜罐</div>
-                    <div class="hp-count hp-zero">0</div>
+                    <div class="hp-count ">48</div>
                 </div>
                 
                 <div class="hp-item">
                     <div class="hp-name">REDIS蜜罐</div>
-                    <div class="hp-count hp-zero">0</div>
+                    <div class="hp-count ">44</div>
                 </div>
                 
                 <div class="hp-item">
@@ -141,48 +158,48 @@
             <div class="top-list">
                 <div class="list-item"><h3>🔝 Top 10 攻击源IP</h3>
                     
-                    <div class="rank-item"><span>104.248.53.211</span><span class="rank-value">391</span></div>
-                    <div class="rank-item"><span>164.92.159.208</span><span class="rank-value">261</span></div>
-                    <div class="rank-item"><span>167.99.9.47</span><span class="rank-value">139</span></div>
+                    <div class="rank-item"><span>93.188.83.96</span><span class="rank-value">1352</span></div>
+                    <div class="rank-item"><span>45.148.10.173</span><span class="rank-value">1048</span></div>
+                    <div class="rank-item"><span>104.243.43.7</span><span class="rank-value">477</span></div>
+                    <div class="rank-item"><span>104.248.53.211</span><span class="rank-value">452</span></div>
+                    <div class="rank-item"><span>164.92.159.208</span><span class="rank-value">318</span></div>
+                    <div class="rank-item"><span>167.99.9.47</span><span class="rank-value">206</span></div>
                     <div class="rank-item"><span>128.199.225.7</span><span class="rank-value">132</span></div>
+                    <div class="rank-item"><span>161.35.123.102</span><span class="rank-value">119</span></div>
                     <div class="rank-item"><span>104.155.111.209</span><span class="rank-value">64</span></div>
-                    <div class="rank-item"><span>34.76.38.241</span><span class="rank-value">64</span></div>
-                    <div class="rank-item"><span>35.205.120.254</span><span class="rank-value">32</span></div>
-                    <div class="rank-item"><span>35.205.220.97</span><span class="rank-value">32</span></div>
-                    <div class="rank-item"><span>34.79.150.183</span><span class="rank-value">32</span></div>
-                    <div class="rank-item"><span>34.79.207.101</span><span class="rank-value">32</span></div></div>
+                    <div class="rank-item"><span>34.76.38.241</span><span class="rank-value">64</span></div></div>
                 <div class="list-item"><h3>🌍 攻击来源国家</h3>
                     
-                    <div class="rank-item"><span>美国</span><span class="rank-value">853</span></div>
-                    <div class="rank-item"><span>比利时</span><span class="rank-value">256</span></div>
+                    <div class="rank-item"><span>美国</span><span class="rank-value">1717</span></div>
+                    <div class="rank-item"><span>俄罗斯</span><span class="rank-value">1361</span></div>
+                    <div class="rank-item"><span>欧洲地区</span><span class="rank-value">1104</span></div>
+                    <div class="rank-item"><span>比利时</span><span class="rank-value">323</span></div>
+                    <div class="rank-item"><span>中国</span><span class="rank-value">147</span></div>
                     <div class="rank-item"><span>新加坡</span><span class="rank-value">133</span></div>
-                    <div class="rank-item"><span>中国</span><span class="rank-value">42</span></div>
-                    <div class="rank-item"><span>加拿大</span><span class="rank-value">15</span></div>
-                    <div class="rank-item"><span>欧洲地区</span><span class="rank-value">13</span></div>
-                    <div class="rank-item"><span>保加利亚</span><span class="rank-value">12</span></div>
-                    <div class="rank-item"><span>德国</span><span class="rank-value">9</span></div>
-                    <div class="rank-item"><span>泰国</span><span class="rank-value">4</span></div>
-                    <div class="rank-item"><span>意大利</span><span class="rank-value">4</span></div></div>
+                    <div class="rank-item"><span>保加利亚</span><span class="rank-value">44</span></div>
+                    <div class="rank-item"><span>加拿大</span><span class="rank-value">41</span></div>
+                    <div class="rank-item"><span>巴基斯坦</span><span class="rank-value">38</span></div>
+                    <div class="rank-item"><span>乌克兰</span><span class="rank-value">11</span></div></div>
                 <div class="list-item"><h3>🔑 弱口令字典 TOP 10</h3>
                     
-                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">27</span></div>
-                    <div class="rank-item"><span class="warning">password</span><span class="rank-value">25</span></div>
-                    <div class="rank-item"><span class="warning">123</span><span class="rank-value">22</span></div>
-                    <div class="rank-item"><span class="warning">password123</span><span class="rank-value">19</span></div>
-                    <div class="rank-item"><span class="warning">root</span><span class="rank-value">16</span></div>
-                    <div class="rank-item"><span class="warning">admin</span><span class="rank-value">14</span></div>
-                    <div class="rank-item"><span class="warning">12345</span><span class="rank-value">6</span></div>
-                    <div class="rank-item"><span class="warning">111111</span><span class="rank-value">5</span></div>
-                    <div class="rank-item"><span class="warning">!QAZ@WSX</span><span class="rank-value">4</span></div>
-                    <div class="rank-item"><span class="warning">123123</span><span class="rank-value">4</span></div>
+                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">380</span></div>
+                    <div class="rank-item"><span class="warning">123</span><span class="rank-value">47</span></div>
+                    <div class="rank-item"><span class="warning">password</span><span class="rank-value">38</span></div>
+                    <div class="rank-item"><span class="warning">111111</span><span class="rank-value">27</span></div>
+                    <div class="rank-item"><span class="warning">password123</span><span class="rank-value">27</span></div>
+                    <div class="rank-item"><span class="warning">admin</span><span class="rank-value">24</span></div>
+                    <div class="rank-item"><span class="warning">root</span><span class="rank-value">23</span></div>
+                    <div class="rank-item"><span class="warning">12345678</span><span class="rank-value">12</span></div>
+                    <div class="rank-item"><span class="warning">xl123456..</span><span class="rank-value">12</span></div>
+                    <div class="rank-item"><span class="warning">12345</span><span class="rank-value">11</span></div>
                     </div>
                 <div class="list-item"><h3>👤 高频用户名 TOP 5</h3>
                     
-                    <div class="rank-item"><span>root</span><span class="rank-value">804</span></div>
-                    <div class="rank-item"><span>admin</span><span class="rank-value">13</span></div>
-                    <div class="rank-item"><span>ubuntu</span><span class="rank-value">10</span></div>
-                    <div class="rank-item"><span>user</span><span class="rank-value">9</span></div>
-                    <div class="rank-item"><span>guest</span><span class="rank-value">8</span></div></div>
+                    <div class="rank-item"><span>root</span><span class="rank-value">4202</span></div>
+                    <div class="rank-item"><span>admin</span><span class="rank-value">40</span></div>
+                    <div class="rank-item"><span>user</span><span class="rank-value">25</span></div>
+                    <div class="rank-item"><span>test</span><span class="rank-value">23</span></div>
+                    <div class="rank-item"><span>ubuntu</span><span class="rank-value">22</span></div></div>
             </div>
         </div>
 
@@ -295,24 +312,34 @@
             </div>
         </div>
 
-        <div class="footer"><p>🤖 HFish 蜜罐自动采集 · 每6小时更新 · 毕业设计作品 · 2026-04-29 17:10:35</p></div>
+        <div class="footer"><p>🤖 HFish 蜜罐自动采集 · 每6小时更新 · 毕业设计作品 · 2026-04-30 10:14:21</p></div>
     </div>
 
+    <!-- 趋势图脚本 -->
     <script>
         const ctx = document.getElementById('attackChart').getContext('2d');
-        const data = {"dates": ["04-15", "04-20", "04-21", "04-22", "04-23", "04-28", "04-29"], "counts": [7, 127, 39, 77, 107, 639, 355]};
+        const data = {"dates": ["04-20", "04-21", "04-22", "04-23", "04-28", "04-29", "04-30"], "counts": [127, 39, 77, 107, 639, 1989, 2014]};
         new Chart(ctx, {
             type:'line', 
-            data:{
-                labels:data.dates, 
-                datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.3}]
-            }, 
-            options:{
-                responsive:true, maintainAspectRatio:false,
-                plugins:{legend:{labels:{color:'#ccc'}}},
-                scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}
-            }
+            data:{labels:data.dates, datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.3}]}, 
+            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#ccc'}}}, scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}}
         });
+    </script>
+
+    <!-- 世界地图脚本 -->
+    <script>
+        fetch('country_data.json')
+          .then(res => res.json())
+          .then(data => {
+              var myChart = echarts.init(document.getElementById('worldMap'));
+              var option = {
+                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': ' + p.value + ' 次'; } },
+                  visualMap: { min: 0, max: data.maxCount, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' } },
+                  series: [{ type: 'map', map: 'world', roam: true, emphasis: { label: { show: true, color: '#fff' }, itemStyle: { areaColor: '#00d4ff' } }, itemStyle: { borderColor: '#333' }, data: data.countries }]
+              };
+              myChart.setOption(option);
+              window.addEventListener('resize', function() { myChart.resize(); });
+          });
     </script>
 </body>
 </html>

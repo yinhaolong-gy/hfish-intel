@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HFish 威胁情报自动化生成脚本 v4.0
-功能：全蜜罐数据采集 + 弱口令字典 + 趋势图 + 分蜜罐统计 + 自动化发布
+HFish 威胁情报自动化生成脚本 v5.0
+功能：全蜜罐数据 + 弱口令字典 + 趋势图 + 世界地图 + CSV导出 + 分蜜罐统计
 """
 
 import requests
@@ -10,6 +10,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from jinja2 import Template
 import os
+import json
 import urllib3
 from collections import Counter
 
@@ -24,18 +25,20 @@ START_TIME = END_TIME - timedelta(days=90)
 
 OUTPUT_DIR = "./docs"
 OUTPUT_FILE = "index.html"
+CSV_FILE = "threat_data.csv"
 
-# ==================== 1. 攻击数据 API ====================
+# ==================== 1. 攻击API ====================
 def fetch_attack_logs():
     url = f"{HFISH_BASE_URL}/api/v1/attack/detail"
     headers = {"Content-Type": "application/json"}
     params = {"api_key": API_KEY}
-    start_ts = int(START_TIME.timestamp())
-    end_ts = int(END_TIME.timestamp())
-    payload = {"start_time": start_ts, "end_time": end_ts, "page": 1, "page_size": 5000}
+    payload = {
+        "start_time": int(START_TIME.timestamp()),
+        "end_time": int(END_TIME.timestamp()),
+        "page": 1, "page_size": 5000
+    }
     try:
         r = requests.post(url, headers=headers, params=params, json=payload, verify=False, timeout=30)
-        r.raise_for_status()
         data = r.json()
         if data.get("response_code") == 0:
             return data.get("data", [])
@@ -43,7 +46,7 @@ def fetch_attack_logs():
         print(f"攻击API失败: {e}")
     return []
 
-# ==================== 2. 账号资产 API ====================
+# ==================== 2. 账号API ====================
 def fetch_accounts():
     url = f"{HFISH_BASE_URL}/api/v1/attack/account"
     headers = {"Content-Type": "application/json"}
@@ -72,6 +75,7 @@ def process_data(raw_logs):
     if not raw_logs:
         return pd.DataFrame(), {}
     df = pd.DataFrame(raw_logs)
+
     column_mapping = {
         "attack_ip": "攻击源IP",
         "ip_location": "地理位置",
@@ -89,7 +93,6 @@ def process_data(raw_logs):
     if "地理位置" in df.columns:
         df["国家"] = df["地理位置"].apply(lambda x: x.split("-")[0] if isinstance(x, str) and "-" in x else x)
 
-    # 所有10种蜜罐的服务名称
     all_honeypots = ["SSH蜜罐", "TCP端口监听", "Elasticsearch蜜罐", "Telnet蜜罐",
                      "FTP蜜罐", "HTTP代理蜜罐", "MYSQL蜜罐", "REDIS蜜罐",
                      "Tomcat蜜罐", "Weblogic蜜罐"]
@@ -108,7 +111,47 @@ def process_data(raw_logs):
     }
     return df, stats
 
-# ==================== 5. HTML 模板 ====================
+# ==================== 5. 世界地图数据 ====================
+def generate_map_data(df):
+    country_name_map = {
+        "中国": "China", "美国": "United States", "俄罗斯": "Russia",
+        "加拿大": "Canada", "新加坡": "Singapore", "日本": "Japan",
+        "韩国": "South Korea", "德国": "Germany", "英国": "United Kingdom",
+        "法国": "France", "印度": "India", "巴西": "Brazil",
+        "澳大利亚": "Australia", "荷兰": "Netherlands", "越南": "Vietnam",
+        "乌克兰": "Ukraine", "波兰": "Poland", "意大利": "Italy",
+        "西班牙": "Spain", "瑞典": "Sweden", "瑞士": "Switzerland",
+        "土耳其": "Turkey", "伊朗": "Iran", "泰国": "Thailand",
+        "马来西亚": "Malaysia", "印度尼西亚": "Indonesia"
+    }
+    if "国家" in df.columns and not df.empty:
+        country_counts = df["国家"].value_counts().to_dict()
+        countries = []
+        for cn_name, count in country_counts.items():
+            en_name = country_name_map.get(cn_name, cn_name)
+            countries.append({"name": en_name, "value": count})
+        max_count = max(country_counts.values()) if country_counts else 1
+        data = {"countries": countries, "maxCount": max_count}
+        with open(os.path.join(OUTPUT_DIR, "country_data.json"), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+
+# ==================== 6. CSV导出 ====================
+def export_csv(df):
+    csv_path = os.path.join(OUTPUT_DIR, CSV_FILE)
+    if not df.empty:
+        export_df = df[["攻击源IP", "地理位置", "服务类型", "端口", "攻击时间"]].head(500).copy()
+        export_df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+        print(f"✅ CSV 已导出: {csv_path}")
+
+# ==================== 7. 图表数据 ====================
+def generate_chart_data(df):
+    if "攻击时间" in df.columns and not df.empty:
+        df["日期"] = pd.to_datetime(df["攻击时间"]).dt.strftime("%m-%d")
+        daily = df["日期"].value_counts().sort_index()
+        return json.dumps({"dates": daily.index.tolist()[-7:], "counts": daily.values.tolist()[-7:]})
+    return json.dumps({"dates": [], "counts": []})
+
+# ==================== 8. HTML 模板 ====================
 HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -117,6 +160,7 @@ HTML_TEMPLATE = r"""
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFish 威胁情报源</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -125,51 +169,61 @@ HTML_TEMPLATE = r"""
             min-height: 100vh; padding: 20px;
         }
         .container { max-width: 1400px; margin: 0 auto; }
-        .header { text-align: center; color: #00d4ff; margin-bottom: 30px; }
+        .header { text-align: center; color: #00d4ff; margin-bottom: 25px; }
         .header h1 { font-size: 2.5em; text-shadow: 0 0 20px rgba(0,212,255,0.5); }
         .header .update-time { opacity: 0.8; font-size: 0.9em; color: #ccc; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .header .btn-download {
+            display: inline-block; margin-top: 10px; padding: 8px 20px;
+            background: rgba(0,212,255,0.2); color: #00d4ff;
+            border: 1px solid rgba(0,212,255,0.4); border-radius: 20px;
+            text-decoration: none; font-size: 0.9em; transition: all 0.3s;
+        }
+        .header .btn-download:hover { background: rgba(0,212,255,0.4); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 25px; }
         .stat-card {
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 20px;
+            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 18px;
             text-align: center; transition: transform 0.3s;
         }
-        .stat-card:hover { transform: translateY(-5px); border-color: #00d4ff; }
-        .stat-number { font-size: 2.2em; font-weight: bold; color: #00d4ff; }
-        .stat-label { color: #ccc; margin-top: 8px; font-size: 0.9em; }
+        .stat-card:hover { transform: translateY(-3px); border-color: #00d4ff; }
+        .stat-number { font-size: 2em; font-weight: bold; color: #00d4ff; }
+        .stat-label { color: #ccc; margin-top: 6px; font-size: 0.85em; }
         .section {
             background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
             border: 1px solid rgba(0,212,255,0.2); border-radius: 15px; padding: 25px; margin-bottom: 25px;
         }
-        .section-title { font-size: 1.4em; color: #00d4ff; margin-bottom: 20px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
-        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .list-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; }
-        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; }
-        .rank-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ddd; font-size: 0.9em; }
-        .rank-value { font-weight: bold; color: #00d4ff; }
-        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        .section-title { font-size: 1.3em; color: #00d4ff; margin-bottom: 18px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
+        .chart-container { width: 100%; height: 350px; }
+        .map-container { width: 100%; height: 500px; }
+        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         .hp-item {
             background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
             border-radius: 10px; padding: 15px; text-align: center;
         }
-        .hp-name { color: #aaa; font-size: 0.8em; margin-bottom: 5px; }
-        .hp-count { color: #00d4ff; font-size: 1.5em; font-weight: bold; }
-        .hp-zero { color: #666; }
+        .hp-name { color: #aaa; font-size: 0.75em; margin-bottom: 5px; }
+        .hp-count { color: #00d4ff; font-size: 1.4em; font-weight: bold; }
+        .hp-zero { color: #555; }
+        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .list-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; }
+        .list-item h3 { color: #00d4ff; margin-bottom: 10px; font-size: 0.95em; }
+        .rank-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ddd; font-size: 0.85em; }
+        .rank-value { font-weight: bold; color: #00d4ff; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; color: #ddd; }
         .data-table th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 10px; text-align: left; }
         .data-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .data-table tr:hover { background: rgba(0,212,255,0.05); }
         .badge { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 3px 8px; border-radius: 15px; font-size: 0.8em; }
         .footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.85em; }
-        .chart-container { max-width: 100%; height: 350px; }
         .warning { color: #ff6b6b; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- 头部 -->
         <div class="header">
             <h1>🛡️ HFish 威胁情报源</h1>
             <p class="update-time">{{ stats.time_range }} | 最后更新: {{ last_update }}</p>
+            <a class="btn-download" href="threat_data.csv" download>📥 下载CSV数据报告</a>
         </div>
 
         <!-- 总览卡片 -->
@@ -186,6 +240,12 @@ HTML_TEMPLATE = r"""
         <div class="section">
             <h2 class="section-title">📈 攻击趋势（近7天）</h2>
             <div class="chart-container"><canvas id="attackChart"></canvas></div>
+        </div>
+
+        <!-- 世界地图 -->
+        <div class="section">
+            <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
+            <div class="map-container" id="worldMap"></div>
         </div>
 
         <!-- 分蜜罐统计 -->
@@ -234,36 +294,37 @@ HTML_TEMPLATE = r"""
         <div class="footer"><p>🤖 HFish 蜜罐自动采集 · 每6小时更新 · 毕业设计作品 · {{ last_update }}</p></div>
     </div>
 
+    <!-- 趋势图脚本 -->
     <script>
         const ctx = document.getElementById('attackChart').getContext('2d');
         const data = {{ chart_data | safe }};
         new Chart(ctx, {
             type:'line', 
-            data:{
-                labels:data.dates, 
-                datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.3}]
-            }, 
-            options:{
-                responsive:true, maintainAspectRatio:false,
-                plugins:{legend:{labels:{color:'#ccc'}}},
-                scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}
-            }
+            data:{labels:data.dates, datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.3}]}, 
+            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#ccc'}}}, scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}}
         });
+    </script>
+
+    <!-- 世界地图脚本 -->
+    <script>
+        fetch('country_data.json')
+          .then(res => res.json())
+          .then(data => {
+              var myChart = echarts.init(document.getElementById('worldMap'));
+              var option = {
+                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': ' + p.value + ' 次'; } },
+                  visualMap: { min: 0, max: data.maxCount, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' } },
+                  series: [{ type: 'map', map: 'world', roam: true, emphasis: { label: { show: true, color: '#fff' }, itemStyle: { areaColor: '#00d4ff' } }, itemStyle: { borderColor: '#333' }, data: data.countries }]
+              };
+              myChart.setOption(option);
+              window.addEventListener('resize', function() { myChart.resize(); });
+          });
     </script>
 </body>
 </html>
 """
 
-# ==================== 6. 图表数据 ====================
-def generate_chart_data(df):
-    import json
-    if "攻击时间" in df.columns and not df.empty:
-        df["日期"] = pd.to_datetime(df["攻击时间"]).dt.strftime("%m-%d")
-        daily = df["日期"].value_counts().sort_index()
-        return json.dumps({"dates": daily.index.tolist()[-7:], "counts": daily.values.tolist()[-7:]})
-    return json.dumps({"dates": [], "counts": []})
-
-# ==================== 7. 生成 HTML ====================
+# ==================== 9. 生成 HTML ====================
 def generate_html(df, stats, accounts):
     template = Template(HTML_TEMPLATE)
     chart_data = generate_chart_data(df)
@@ -283,7 +344,7 @@ def generate_html(df, stats, accounts):
         f.write(html_content)
     print(f"✅ HTML 已生成: {output_path}")
 
-# ==================== 8. 主函数 ====================
+# ==================== 10. 主函数 ====================
 def main():
     print("🔄 拉取攻击日志...")
     logs = fetch_attack_logs()
@@ -292,9 +353,11 @@ def main():
     if logs:
         print(f"📥 攻击: {len(logs)} 条, 账号: {len(accounts)} 条")
         df, stats = process_data(logs)
-        print(f"📊 总攻击 {stats['total_attacks']} 次, 独立IP {stats['unique_ips']} 个, 活跃蜜罐 {stats['active_honeypots']} 个")
+        print(f"📊 总攻击 {stats['total_attacks']} 次, IP {stats['unique_ips']} 个, 活跃蜜罐 {stats['active_honeypots']} 个")
+        generate_map_data(df)
+        export_csv(df)
         generate_html(df, stats, accounts)
-        print("✨ 完成！")
+        print("✨ v5.0 完成！")
     else:
         print("⚠️ 无数据")
 
