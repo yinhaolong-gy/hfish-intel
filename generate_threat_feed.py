@@ -445,58 +445,126 @@ HTML_TEMPLATE = r"""
         });
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/world.js"></script>
     <script>
-        var worldMapData = {
-            "type": "FeatureCollection",
-            "features": [
-                { "type": "Feature", "properties": { "name": "China" }, "geometry": { "type": "Polygon", "coordinates": [[[73.4991,18.1636],[135.083,18.1636],[135.083,53.5608],[73.4991,53.5608],[73.4991,18.1636]]] } },
-                { "type": "Feature", "properties": { "name": "United States" }, "geometry": { "type": "Polygon", "coordinates": [[[-172.4609,18.9164],[-66.9647,18.9164],[-66.9647,71.4416],[-172.4609,71.4416],[-172.4609,18.9164]]] } },
-                { "type": "Feature", "properties": { "name": "Russia" }, "geometry": { "type": "Polygon", "coordinates": [[[19.6008,41.2651],[190.015,41.2651],[190.015,82.1682],[19.6008,82.1682],[19.6008,41.2651]]] } },
-                { "type": "Feature", "properties": { "name": "Japan" }, "geometry": { "type": "Polygon", "coordinates": [[[129.834,30.2485],[146.347,30.2485],[146.347,45.5453],[129.834,45.5453],[129.834,30.2485]]] } },
-                { "type": "Feature", "properties": { "name": "South Korea" }, "geometry": { "type": "Polygon", "coordinates": [[[124.567,33.0243],[131.102,33.0243],[131.102,38.6386],[124.567,38.6386],[124.567,33.0243]]] } },
-                { "type": "Feature", "properties": { "name": "Germany" }, "geometry": { "type": "Polygon", "coordinates": [[[5.8661,47.2693],[15.0415,47.2693],[15.0415,55.0589],[5.8661,55.0589],[5.8661,47.2693]]] } },
-                { "type": "Feature", "properties": { "name": "United Kingdom" }, "geometry": { "type": "Polygon", "coordinates": [[[-8.1655,49.8752],[1.7694,49.8752],[1.7694,59.4743],[-8.1655,59.4743],[-8.1655,49.8752]]] } },
-                { "type": "Feature", "properties": { "name": "France" }, "geometry": { "type": "Polygon", "coordinates": [[[-5.1057,41.2579],[9.573,41.2579],[9.573,51.2529],[-5.1057,51.2529],[-5.1057,41.2579]]] } },
-                { "type": "Feature", "properties": { "name": "Canada" }, "geometry": { "type": "Polygon", "coordinates": [[[-141.002,41.6781],[-52.6172,41.6781],[-52.6172,83.116],[-141.002,83.116],[-141.002,41.6781]]] } },
-                { "type": "Feature", "properties": { "name": "Australia" }, "geometry": { "type": "Polygon", "coordinates": [[[112.921,-43.6333],[153.63,-43.6333],[153.63,-10.6669],[112.921,-10.6669],[112.921,-43.6333]]] } },
-                { "type": "Feature", "properties": { "name": "India" }, "geometry": { "type": "Polygon", "coordinates": [[[68.1766,6.7471],[97.4026,6.7471],[97.4026,35.5041],[68.1766,35.5041],[68.1766,6.7471]]] } },
-                { "type": "Feature", "properties": { "name": "Brazil" }, "geometry": { "type": "Polygon", "coordinates": [[[-74.0, -33.75],[-34.5, -33.75],[-34.5, 5.25],[-74.0, 5.25],[-74.0, -33.75]]] } },
-                { "type": "Feature", "properties": { "name": "Singapore" }, "geometry": { "type": "Polygon", "coordinates": [[[103.603,1.2547],[103.918,1.2547],[103.918,1.4755],[103.603,1.4755],[103.603,1.2547]]] } },
-                { "type": "Feature", "properties": { "name": "Malaysia" }, "geometry": { "type": "Polygon", "coordinates": [[[95.6147,0.7339],[119.132,0.7339],[119.132,7.3926],[95.6147,7.3926],[95.6147,0.7339]]] } },
-                { "type": "Feature", "properties": { "name": "Indonesia" }, "geometry": { "type": "Polygon", "coordinates": [[[94.5996,-11.0949],[141.016,-11.0949],[141.016,6.2135],[94.5996,6.2135],[94.5996,-11.0949]]] } },
-                { "type": "Feature", "properties": { "name": "Thailand" }, "geometry": { "type": "Polygon", "coordinates": [[[97.3418,5.6329],[105.695,5.6329],[105.695,20.4966],[97.3418,20.4966],[97.3418,5.6329]]] } },
-                { "type": "Feature", "properties": { "name": "Vietnam" }, "geometry": { "type": "Polygon", "coordinates": [[[102.172,8.2249],[109.478,8.2249],[109.478,23.3735],[102.172,23.3735],[102.172,8.2249]]] } },
-                { "type": "Feature", "properties": { "name": "Turkey" }, "geometry": { "type": "Polygon", "coordinates": [[[25.6403,35.8817],[44.8589,35.8817],[44.8589,42.2879],[25.6403,42.2879],[25.6403,35.8817]]] } },
-                { "type": "Feature", "properties": { "name": "Netherlands" }, "geometry": { "type": "Polygon", "coordinates": [[[3.3691,50.7525],[7.2295,50.7525],[7.2295,53.5555],[3.3691,53.5555],[3.3691,50.7525]]] } },
-                { "type": "Feature", "properties": { "name": "Italy" }, "geometry": { "type": "Polygon", "coordinates": [[[6.6211,35.4981],[18.516,35.4981],[18.516,47.0964],[6.6211,47.0964],[6.6211,35.4981]]] } },
-                { "type": "Feature", "properties": { "name": "Spain" }, "geometry": { "type": "Polygon", "coordinates": [[[-9.3623,36.0606],[-3.8385,36.0606],[-3.8385,43.7446],[-9.3623,43.7446],[-9.3623,36.0606]]] } },
-                { "type": "Feature", "properties": { "name": "Sweden" }, "geometry": { "type": "Polygon", "coordinates": [[[11.0413,55.3645],[24.1577,55.3645],[24.1577,69.0686],[11.0413,69.0686],[11.0413,55.3645]]] } },
-                { "type": "Feature", "properties": { "name": "Switzerland" }, "geometry": { "type": "Polygon", "coordinates": [[[5.9559,45.818],[10.4921,45.818],[10.4921,47.8086],[5.9559,47.8086],[5.9559,45.818]]] } },
-                { "type": "Feature", "properties": { "name": "Poland" }, "geometry": { "type": "Polygon", "coordinates": [[[14.1565,49.0032],[24.1577,49.0032],[24.1577,54.8099],[14.1565,54.8099],[14.1565,49.0032]]] } },
-                { "type": "Feature", "properties": { "name": "Ukraine" }, "geometry": { "type": "Polygon", "coordinates": [[[21.7251,44.3096],[40.2286,44.3096],[40.2286,52.3688],[21.7251,52.3688],[21.7251,44.3096]]] } },
-                { "type": "Feature", "properties": { "name": "Iran" }, "geometry": { "type": "Polygon", "coordinates": [[[44.0,25.0],[63.0,25.0],[63.0,39.0],[44.0,39.0],[44.0,25.0]]] } }
-            ]
-        };
         fetch('country_data.json')
           .then(res => res.json())
           .then(data => {
               var myChart = echarts.init(document.getElementById('worldMap'));
-              echarts.registerMap('world', worldMapData);
               var option = {
-                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': ' + (p.value || 0) + ' 次攻击'; }, backgroundColor: 'rgba(0,0,0,0.85)', textStyle: { color: '#fff' } },
-                  visualMap: { min: 0, max: data.maxCount || 100, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' }, itemWidth: 15 },
-                  series: [{ type: 'map', map: 'world', roam: true, zoom: 1.2, emphasis: { label: { show: true, color: '#fff', fontSize: 12 }, itemStyle: { areaColor: '#00d4ff', shadowBlur: 20, shadowColor: 'rgba(0,212,255,0.5)' } }, itemStyle: { borderColor: '#444', areaColor: '#2a2a4a', borderWidth: 1 }, data: data.countries || [] }]
+                  backgroundColor: 'transparent',
+                  tooltip: { 
+                      trigger: 'item', 
+                      formatter: function(p) { 
+                          return p.name + ': ' + (p.value || 0) + ' 次攻击'; 
+                      }, 
+                      backgroundColor: 'rgba(0,0,0,0.85)', 
+                      textStyle: { color: '#fff' },
+                      borderColor: 'rgba(0,212,255,0.3)',
+                      borderWidth: 1
+                  },
+                  visualMap: { 
+                      min: 0, 
+                      max: data.maxCount || 100, 
+                      text: ['高', '低'], 
+                      realtime: false, 
+                      calculable: true, 
+                      inRange: { color: ['#1a1a3e', '#0d47a1', '#1565c0', '#00d4ff'] }, 
+                      textStyle: { color: '#ccc' }, 
+                      itemWidth: 15,
+                      itemHeight: 100,
+                      left: '5%',
+                      top: 'center'
+                  },
+                  series: [{ 
+                      type: 'map', 
+                      map: 'world', 
+                      roam: true, 
+                      zoom: 1.2,
+                      center: [100, 30],
+                      label: {
+                          show: false
+                      },
+                      emphasis: { 
+                          label: { 
+                              show: true, 
+                              color: '#fff', 
+                              fontSize: 11,
+                              fontWeight: 'bold'
+                          }, 
+                          itemStyle: { 
+                              areaColor: '#00d4ff', 
+                              shadowBlur: 20, 
+                              shadowColor: 'rgba(0,212,255,0.6)' 
+                          } 
+                      }, 
+                      itemStyle: { 
+                          borderColor: 'rgba(255,255,255,0.15)', 
+                          areaColor: 'rgba(42, 42, 74, 0.8)', 
+                          borderWidth: 1 
+                      }, 
+                      data: data.countries || [] 
+                  }]
               };
               myChart.setOption(option);
               window.addEventListener('resize', function() { myChart.resize(); });
           })
           .catch(err => {
               var myChart = echarts.init(document.getElementById('worldMap'));
-              echarts.registerMap('world', worldMapData);
               var option = {
-                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': 0 次攻击'; }, backgroundColor: 'rgba(0,0,0,0.85)', textStyle: { color: '#fff' } },
-                  visualMap: { min: 0, max: 100, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' }, itemWidth: 15 },
-                  series: [{ type: 'map', map: 'world', roam: true, zoom: 1.2, emphasis: { label: { show: true, color: '#fff', fontSize: 12 }, itemStyle: { areaColor: '#00d4ff', shadowBlur: 20, shadowColor: 'rgba(0,212,255,0.5)' } }, itemStyle: { borderColor: '#444', areaColor: '#2a2a4a', borderWidth: 1 }, data: [] }]
+                  backgroundColor: 'transparent',
+                  tooltip: { 
+                      trigger: 'item', 
+                      formatter: function(p) { 
+                          return p.name + ': 0 次攻击'; 
+                      }, 
+                      backgroundColor: 'rgba(0,0,0,0.85)', 
+                      textStyle: { color: '#fff' },
+                      borderColor: 'rgba(0,212,255,0.3)',
+                      borderWidth: 1
+                  },
+                  visualMap: { 
+                      min: 0, 
+                      max: 100, 
+                      text: ['高', '低'], 
+                      realtime: false, 
+                      calculable: true, 
+                      inRange: { color: ['#1a1a3e', '#0d47a1', '#1565c0', '#00d4ff'] }, 
+                      textStyle: { color: '#ccc' }, 
+                      itemWidth: 15,
+                      itemHeight: 100,
+                      left: '5%',
+                      top: 'center'
+                  },
+                  series: [{ 
+                      type: 'map', 
+                      map: 'world', 
+                      roam: true, 
+                      zoom: 1.2,
+                      center: [100, 30],
+                      label: {
+                          show: false
+                      },
+                      emphasis: { 
+                          label: { 
+                              show: true, 
+                              color: '#fff', 
+                              fontSize: 11,
+                              fontWeight: 'bold'
+                          }, 
+                          itemStyle: { 
+                              areaColor: '#00d4ff', 
+                              shadowBlur: 20, 
+                              shadowColor: 'rgba(0,212,255,0.6)' 
+                          } 
+                      }, 
+                      itemStyle: { 
+                          borderColor: 'rgba(255,255,255,0.15)', 
+                          areaColor: 'rgba(42, 42, 74, 0.8)', 
+                          borderWidth: 1 
+                      }, 
+                      data: [] 
+                  }]
               };
               myChart.setOption(option);
               window.addEventListener('resize', function() { myChart.resize(); });
