@@ -25,7 +25,6 @@ START_TIME = END_TIME - timedelta(days=90)
 
 OUTPUT_DIR = "./docs"
 OUTPUT_FILE = "index.html"
-CSV_FILE = "threat_data.csv"
 
 # ==================== 1. 攻击API ====================
 def fetch_attack_logs():
@@ -135,15 +134,7 @@ def generate_map_data(df):
         with open(os.path.join(OUTPUT_DIR, "country_data.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False)
 
-# ==================== 6. CSV导出 ====================
-def export_csv(df):
-    csv_path = os.path.join(OUTPUT_DIR, CSV_FILE)
-    if not df.empty:
-        export_df = df[["攻击源IP", "地理位置", "服务类型", "端口", "攻击时间"]].head(500).copy()
-        export_df.to_csv(csv_path, index=False, encoding="utf-8-sig")
-        print(f"✅ CSV 已导出: {csv_path}")
-
-# ==================== 7. 图表数据 ====================
+# ==================== 6. 图表数据 ====================
 def generate_chart_data(df):
     if "攻击时间" in df.columns and not df.empty:
         df["日期"] = pd.to_datetime(df["攻击时间"]).dt.strftime("%m-%d")
@@ -151,7 +142,7 @@ def generate_chart_data(df):
         return json.dumps({"dates": daily.index.tolist()[-7:], "counts": daily.values.tolist()[-7:]})
     return json.dumps({"dates": [], "counts": []})
 
-# ==================== 8. HTML 模板 ====================
+# ==================== 7. HTML 模板 ====================
 HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -164,69 +155,221 @@ HTML_TEMPLATE = r"""
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh; padding: 20px;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a3e 50%, #0f0f2a 100%);
+            min-height: 100vh; 
+            padding: 30px 20px;
+            color: #e0e0e0;
         }
         .container { max-width: 1400px; margin: 0 auto; }
-        .header { text-align: center; color: #00d4ff; margin-bottom: 25px; }
-        .header h1 { font-size: 2.5em; text-shadow: 0 0 20px rgba(0,212,255,0.5); }
-        .header .update-time { opacity: 0.8; font-size: 0.9em; color: #ccc; }
-        .header .btn-download {
-            display: inline-block; margin-top: 10px; padding: 8px 20px;
-            background: rgba(0,212,255,0.2); color: #00d4ff;
-            border: 1px solid rgba(0,212,255,0.4); border-radius: 20px;
-            text-decoration: none; font-size: 0.9em; transition: all 0.3s;
+        .header { 
+            text-align: center; 
+            margin-bottom: 35px; 
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(13,71,177,0.1) 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(0,212,255,0.2);
         }
-        .header .btn-download:hover { background: rgba(0,212,255,0.4); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 25px; }
+        .header h1 { 
+            font-size: 2.8em; 
+            color: #00d4ff;
+            text-shadow: 0 0 30px rgba(0,212,255,0.6), 0 0 60px rgba(0,212,255,0.3);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .header .update-time { 
+            font-size: 0.95em; 
+            color: #999;
+            opacity: 0.9;
+        }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 30px; 
+        }
         .stat-card {
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,212,255,0.3); border-radius: 15px; padding: 18px;
-            text-align: center; transition: transform 0.3s;
+            background: rgba(255,255,255,0.05); 
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0,212,255,0.25); 
+            border-radius: 18px; 
+            padding: 22px;
+            text-align: center; 
+            transition: all 0.35s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .stat-card:hover { transform: translateY(-3px); border-color: #00d4ff; }
-        .stat-number { font-size: 2em; font-weight: bold; color: #00d4ff; }
-        .stat-label { color: #ccc; margin-top: 6px; font-size: 0.85em; }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,212,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        .stat-card:hover { 
+            transform: translateY(-5px); 
+            border-color: #00d4ff;
+            box-shadow: 0 10px 40px rgba(0,212,255,0.2);
+        }
+        .stat-number { 
+            font-size: 2.4em; 
+            font-weight: 700; 
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+        .stat-label { 
+            color: #aaa; 
+            margin-top: 8px; 
+            font-size: 0.9em; 
+            letter-spacing: 1px;
+        }
         .section {
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border: 1px solid rgba(0,212,255,0.2); border-radius: 15px; padding: 25px; margin-bottom: 25px;
+            background: rgba(255,255,255,0.03); 
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0,212,255,0.18); 
+            border-radius: 20px; 
+            padding: 30px; 
+            margin-bottom: 30px;
         }
-        .section-title { font-size: 1.3em; color: #00d4ff; margin-bottom: 18px; border-bottom: 2px solid rgba(0,212,255,0.3); padding-bottom: 10px; }
-        .chart-container { width: 100%; height: 350px; }
-        .map-container { width: 100%; height: 500px; }
-        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .section-title { 
+            font-size: 1.4em; 
+            color: #00d4ff; 
+            margin-bottom: 22px; 
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(0,212,255,0.25);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #00d4ff, #0d47a1);
+            border-radius: 2px;
+        }
+        .chart-container { width: 100%; height: 380px; }
+        .map-container { width: 100%; height: 520px; }
+        .honeypot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
         .hp-item {
-            background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
-            border-radius: 10px; padding: 15px; text-align: center;
+            background: rgba(0,212,255,0.06); 
+            border: 1px solid rgba(0,212,255,0.18);
+            border-radius: 14px; 
+            padding: 20px; 
+            text-align: center;
+            transition: all 0.3s ease;
         }
-        .hp-name { color: #aaa; font-size: 0.75em; margin-bottom: 5px; }
-        .hp-count { color: #00d4ff; font-size: 1.4em; font-weight: bold; }
+        .hp-item:hover {
+            border-color: rgba(0,212,255,0.4);
+            transform: scale(1.03);
+        }
+        .hp-name { color: #a0a0a0; font-size: 0.8em; margin-bottom: 8px; }
+        .hp-count { color: #00d4ff; font-size: 1.8em; font-weight: 700; }
         .hp-zero { color: #555; }
-        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .list-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; }
-        .list-item h3 { color: #00d4ff; margin-bottom: 10px; font-size: 0.95em; }
-        .rank-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #ddd; font-size: 0.85em; }
-        .rank-value { font-weight: bold; color: #00d4ff; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; color: #ddd; }
-        .data-table th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 10px; text-align: left; }
-        .data-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .data-table tr:hover { background: rgba(0,212,255,0.05); }
-        .badge { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 3px 8px; border-radius: 15px; font-size: 0.8em; }
-        .footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.85em; }
+        .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; }
+        .list-item { 
+            background: rgba(0,0,0,0.35); 
+            border-radius: 14px; 
+            padding: 20px;
+            border: 1px solid rgba(0,212,255,0.1);
+        }
+        .list-item h3 { 
+            color: #00d4ff; 
+            margin-bottom: 15px; 
+            font-size: 1.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rank-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 8px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.06); 
+            color: #ccc; 
+            font-size: 0.88em;
+            transition: background 0.2s ease;
+        }
+        .rank-item:hover {
+            background: rgba(0,212,255,0.05);
+            padding-left: 8px;
+            border-radius: 4px;
+        }
+        .rank-value { 
+            font-weight: 600; 
+            color: #00d4ff;
+        }
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            font-size: 0.88em; 
+            color: #ddd;
+        }
+        .data-table th { 
+            background: rgba(0,212,255,0.15); 
+            color: #00d4ff; 
+            padding: 12px 15px; 
+            text-align: left;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+        }
+        .data-table th:first-child { border-radius: 8px 0 0 0; }
+        .data-table th:last-child { border-radius: 0 8px 0 0; }
+        .data-table td { 
+            padding: 10px 15px; 
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .data-table tr:hover { 
+            background: rgba(0,212,255,0.06);
+        }
+        .badge { 
+            background: rgba(0,212,255,0.15); 
+            color: #00d4ff; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .footer { 
+            text-align: center; 
+            color: #666; 
+            margin-top: 50px; 
+            padding: 20px;
+            font-size: 0.9em;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
         .warning { color: #ff6b6b; }
+        .highlight {
+            background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(13,71,177,0.15));
+            border-left: 3px solid #00d4ff;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-number { font-size: 1.8em; }
+            .section { padding: 20px; }
+            .chart-container { height: 280px; }
+            .map-container { height: 400px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 头部 -->
         <div class="header">
-            <h1>🛡️ HFish 威胁情报源</h1>
-            <p class="update-time">{{ stats.time_range }} | 最后更新: {{ last_update }}</p>
-            <a class="btn-download" href="threat_data.csv" download>📥 下载CSV数据报告</a>
+            <h1>🛡️ HFish 威胁情报监控中心</h1>
+            <p class="update-time">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
         </div>
 
-        <!-- 总览卡片 -->
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-number">{{ stats.total_attacks }}</div><div class="stat-label">总攻击次数</div></div>
             <div class="stat-card"><div class="stat-number">{{ stats.unique_ips }}</div><div class="stat-label">独立攻击IP</div></div>
@@ -236,21 +379,18 @@ HTML_TEMPLATE = r"""
             <div class="stat-card"><div class="stat-number">{{ stats.active_honeypots }}</div><div class="stat-label">活跃蜜罐数</div></div>
         </div>
 
-        <!-- 攻击趋势图 -->
         <div class="section">
-            <h2 class="section-title">📈 攻击趋势（近7天）</h2>
+            <h2 class="section-title">📈 攻击趋势分析（近7天）</h2>
             <div class="chart-container"><canvas id="attackChart"></canvas></div>
         </div>
 
-        <!-- 世界地图 -->
         <div class="section">
             <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
             <div class="map-container" id="worldMap"></div>
         </div>
 
-        <!-- 分蜜罐统计 -->
         <div class="section">
-            <h2 class="section-title">🎯 各蜜罐受攻击次数</h2>
+            <h2 class="section-title">🎯 各蜜罐受攻击统计</h2>
             <div class="honeypot-grid">
                 {% for name, count in stats.honeypot_data.items() %}
                 <div class="hp-item">
@@ -261,7 +401,6 @@ HTML_TEMPLATE = r"""
             </div>
         </div>
 
-        <!-- 攻击统计分析 -->
         <div class="section">
             <h2 class="section-title">📊 攻击统计分析</h2>
             <div class="top-list">
@@ -281,40 +420,83 @@ HTML_TEMPLATE = r"""
             </div>
         </div>
 
-        <!-- 最新攻击详情 -->
         <div class="section">
-            <h2 class="section-title">📋 最新攻击详情（前100条）</h2>
-            <div style="overflow-x:auto; max-height:400px; overflow-y:auto;">
+            <h2 class="section-title">📋 最新攻击详情记录</h2>
+            <div style="overflow-x:auto; max-height:420px; overflow-y:auto;">
                 <table class="data-table"><thead><tr><th>攻击源IP</th><th>地理位置</th><th>服务类型</th><th>端口</th><th>攻击时间</th></tr></thead><tbody>
                     {% for _, row in df.head(100).iterrows() %}
                     <tr><td><span class="badge">{{ row.get('攻击源IP', '-') }}</span></td><td>{{ row.get('地理位置', '-') }}</td><td>{{ row.get('服务类型', '-') }}</td><td>{{ row.get('端口', '-') }}</td><td>{{ row.get('攻击时间', '-') }}</td></tr>{% endfor %}</tbody></table>
             </div>
         </div>
 
-        <div class="footer"><p>🤖 HFish 蜜罐自动采集 · 每6小时更新 · 毕业设计作品 · {{ last_update }}</p></div>
+        <div class="footer">
+            <p>🤖 HFish 蜜罐系统自动采集 · 每6小时更新 · 毕业设计作品</p>
+            <p style="margin-top: 8px; font-size: 0.8em; color: #555;">© 2024 Security Monitoring System</p>
+        </div>
     </div>
 
-    <!-- 趋势图脚本 -->
     <script>
         const ctx = document.getElementById('attackChart').getContext('2d');
         const data = {{ chart_data | safe }};
         new Chart(ctx, {
             type:'line', 
-            data:{labels:data.dates, datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.3}]}, 
-            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#ccc'}}}, scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#ccc'}}}}
+            data:{labels:data.dates, datasets:[{label:'攻击次数',data:data.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',fill:true,tension:0.4,pointBackgroundColor:'#00d4ff',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,pointHoverRadius:8}]}, 
+            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:true,labels:{color:'#ccc',font:{size:12}}},tooltip:{backgroundColor:'rgba(0,0,0,0.8)',titleColor:'#00d4ff',bodyColor:'#fff',borderColor:'rgba(0,212,255,0.3)',borderWidth:1}}, scales:{x:{grid:{color:'rgba(255,255,255,0.05)',drawBorder:false},ticks:{color:'#999'}},y:{grid:{color:'rgba(255,255,255,0.05)',drawBorder:false},ticks:{color:'#999'}}}}
         });
     </script>
 
-    <!-- 世界地图脚本 -->
     <script>
+        var worldMapData = {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "properties": { "name": "China" }, "geometry": { "type": "Polygon", "coordinates": [[[73.4991,18.1636],[135.083,18.1636],[135.083,53.5608],[73.4991,53.5608],[73.4991,18.1636]]] } },
+                { "type": "Feature", "properties": { "name": "United States" }, "geometry": { "type": "Polygon", "coordinates": [[[-172.4609,18.9164],[-66.9647,18.9164],[-66.9647,71.4416],[-172.4609,71.4416],[-172.4609,18.9164]]] } },
+                { "type": "Feature", "properties": { "name": "Russia" }, "geometry": { "type": "Polygon", "coordinates": [[[19.6008,41.2651],[190.015,41.2651],[190.015,82.1682],[19.6008,82.1682],[19.6008,41.2651]]] } },
+                { "type": "Feature", "properties": { "name": "Japan" }, "geometry": { "type": "Polygon", "coordinates": [[[129.834,30.2485],[146.347,30.2485],[146.347,45.5453],[129.834,45.5453],[129.834,30.2485]]] } },
+                { "type": "Feature", "properties": { "name": "South Korea" }, "geometry": { "type": "Polygon", "coordinates": [[[124.567,33.0243],[131.102,33.0243],[131.102,38.6386],[124.567,38.6386],[124.567,33.0243]]] } },
+                { "type": "Feature", "properties": { "name": "Germany" }, "geometry": { "type": "Polygon", "coordinates": [[[5.8661,47.2693],[15.0415,47.2693],[15.0415,55.0589],[5.8661,55.0589],[5.8661,47.2693]]] } },
+                { "type": "Feature", "properties": { "name": "United Kingdom" }, "geometry": { "type": "Polygon", "coordinates": [[[-8.1655,49.8752],[1.7694,49.8752],[1.7694,59.4743],[-8.1655,59.4743],[-8.1655,49.8752]]] } },
+                { "type": "Feature", "properties": { "name": "France" }, "geometry": { "type": "Polygon", "coordinates": [[[-5.1057,41.2579],[9.573,41.2579],[9.573,51.2529],[-5.1057,51.2529],[-5.1057,41.2579]]] } },
+                { "type": "Feature", "properties": { "name": "Canada" }, "geometry": { "type": "Polygon", "coordinates": [[[-141.002,41.6781],[-52.6172,41.6781],[-52.6172,83.116],[-141.002,83.116],[-141.002,41.6781]]] } },
+                { "type": "Feature", "properties": { "name": "Australia" }, "geometry": { "type": "Polygon", "coordinates": [[[112.921,-43.6333],[153.63,-43.6333],[153.63,-10.6669],[112.921,-10.6669],[112.921,-43.6333]]] } },
+                { "type": "Feature", "properties": { "name": "India" }, "geometry": { "type": "Polygon", "coordinates": [[[68.1766,6.7471],[97.4026,6.7471],[97.4026,35.5041],[68.1766,35.5041],[68.1766,6.7471]]] } },
+                { "type": "Feature", "properties": { "name": "Brazil" }, "geometry": { "type": "Polygon", "coordinates": [[[-74.0, -33.75],[-34.5, -33.75],[-34.5, 5.25],[-74.0, 5.25],[-74.0, -33.75]]] } },
+                { "type": "Feature", "properties": { "name": "Singapore" }, "geometry": { "type": "Polygon", "coordinates": [[[103.603,1.2547],[103.918,1.2547],[103.918,1.4755],[103.603,1.4755],[103.603,1.2547]]] } },
+                { "type": "Feature", "properties": { "name": "Malaysia" }, "geometry": { "type": "Polygon", "coordinates": [[[95.6147,0.7339],[119.132,0.7339],[119.132,7.3926],[95.6147,7.3926],[95.6147,0.7339]]] } },
+                { "type": "Feature", "properties": { "name": "Indonesia" }, "geometry": { "type": "Polygon", "coordinates": [[[94.5996,-11.0949],[141.016,-11.0949],[141.016,6.2135],[94.5996,6.2135],[94.5996,-11.0949]]] } },
+                { "type": "Feature", "properties": { "name": "Thailand" }, "geometry": { "type": "Polygon", "coordinates": [[[97.3418,5.6329],[105.695,5.6329],[105.695,20.4966],[97.3418,20.4966],[97.3418,5.6329]]] } },
+                { "type": "Feature", "properties": { "name": "Vietnam" }, "geometry": { "type": "Polygon", "coordinates": [[[102.172,8.2249],[109.478,8.2249],[109.478,23.3735],[102.172,23.3735],[102.172,8.2249]]] } },
+                { "type": "Feature", "properties": { "name": "Turkey" }, "geometry": { "type": "Polygon", "coordinates": [[[25.6403,35.8817],[44.8589,35.8817],[44.8589,42.2879],[25.6403,42.2879],[25.6403,35.8817]]] } },
+                { "type": "Feature", "properties": { "name": "Netherlands" }, "geometry": { "type": "Polygon", "coordinates": [[[3.3691,50.7525],[7.2295,50.7525],[7.2295,53.5555],[3.3691,53.5555],[3.3691,50.7525]]] } },
+                { "type": "Feature", "properties": { "name": "Italy" }, "geometry": { "type": "Polygon", "coordinates": [[[6.6211,35.4981],[18.516,35.4981],[18.516,47.0964],[6.6211,47.0964],[6.6211,35.4981]]] } },
+                { "type": "Feature", "properties": { "name": "Spain" }, "geometry": { "type": "Polygon", "coordinates": [[[-9.3623,36.0606],[-3.8385,36.0606],[-3.8385,43.7446],[-9.3623,43.7446],[-9.3623,36.0606]]] } },
+                { "type": "Feature", "properties": { "name": "Sweden" }, "geometry": { "type": "Polygon", "coordinates": [[[11.0413,55.3645],[24.1577,55.3645],[24.1577,69.0686],[11.0413,69.0686],[11.0413,55.3645]]] } },
+                { "type": "Feature", "properties": { "name": "Switzerland" }, "geometry": { "type": "Polygon", "coordinates": [[[5.9559,45.818],[10.4921,45.818],[10.4921,47.8086],[5.9559,47.8086],[5.9559,45.818]]] } },
+                { "type": "Feature", "properties": { "name": "Poland" }, "geometry": { "type": "Polygon", "coordinates": [[[14.1565,49.0032],[24.1577,49.0032],[24.1577,54.8099],[14.1565,54.8099],[14.1565,49.0032]]] } },
+                { "type": "Feature", "properties": { "name": "Ukraine" }, "geometry": { "type": "Polygon", "coordinates": [[[21.7251,44.3096],[40.2286,44.3096],[40.2286,52.3688],[21.7251,52.3688],[21.7251,44.3096]]] } },
+                { "type": "Feature", "properties": { "name": "Iran" }, "geometry": { "type": "Polygon", "coordinates": [[[44.0,25.0],[63.0,25.0],[63.0,39.0],[44.0,39.0],[44.0,25.0]]] } }
+            ]
+        };
         fetch('country_data.json')
           .then(res => res.json())
           .then(data => {
               var myChart = echarts.init(document.getElementById('worldMap'));
+              echarts.registerMap('world', worldMapData);
               var option = {
-                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': ' + p.value + ' 次'; } },
-                  visualMap: { min: 0, max: data.maxCount, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' } },
-                  series: [{ type: 'map', map: 'world', roam: true, emphasis: { label: { show: true, color: '#fff' }, itemStyle: { areaColor: '#00d4ff' } }, itemStyle: { borderColor: '#333' }, data: data.countries }]
+                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': ' + (p.value || 0) + ' 次攻击'; }, backgroundColor: 'rgba(0,0,0,0.85)', textStyle: { color: '#fff' } },
+                  visualMap: { min: 0, max: data.maxCount || 100, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' }, itemWidth: 15 },
+                  series: [{ type: 'map', map: 'world', roam: true, zoom: 1.2, emphasis: { label: { show: true, color: '#fff', fontSize: 12 }, itemStyle: { areaColor: '#00d4ff', shadowBlur: 20, shadowColor: 'rgba(0,212,255,0.5)' } }, itemStyle: { borderColor: '#444', areaColor: '#2a2a4a', borderWidth: 1 }, data: data.countries || [] }]
+              };
+              myChart.setOption(option);
+              window.addEventListener('resize', function() { myChart.resize(); });
+          })
+          .catch(err => {
+              var myChart = echarts.init(document.getElementById('worldMap'));
+              echarts.registerMap('world', worldMapData);
+              var option = {
+                  tooltip: { trigger: 'item', formatter: function(p) { return p.name + ': 0 次攻击'; }, backgroundColor: 'rgba(0,0,0,0.85)', textStyle: { color: '#fff' } },
+                  visualMap: { min: 0, max: 100, text: ['高', '低'], realtime: false, calculable: true, inRange: { color: ['#1a1a2e', '#0d47a1', '#1565c0', '#00d4ff'] }, textStyle: { color: '#ccc' }, itemWidth: 15 },
+                  series: [{ type: 'map', map: 'world', roam: true, zoom: 1.2, emphasis: { label: { show: true, color: '#fff', fontSize: 12 }, itemStyle: { areaColor: '#00d4ff', shadowBlur: 20, shadowColor: 'rgba(0,212,255,0.5)' } }, itemStyle: { borderColor: '#444', areaColor: '#2a2a4a', borderWidth: 1 }, data: [] }]
               };
               myChart.setOption(option);
               window.addEventListener('resize', function() { myChart.resize(); });
@@ -355,7 +537,6 @@ def main():
         df, stats = process_data(logs)
         print(f"📊 总攻击 {stats['total_attacks']} 次, IP {stats['unique_ips']} 个, 活跃蜜罐 {stats['active_honeypots']} 个")
         generate_map_data(df)
-        export_csv(df)
         generate_html(df, stats, accounts)
         print("✨ v5.0 完成！")
     else:
