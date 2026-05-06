@@ -492,16 +492,76 @@ def generate_html(df, stats, accounts, week_compare):
     <!-- 世界地图 -->
     <script>
         fetch('country_data.json').then(res=>res.json()).then(data=>{
+            var worldMapData = {
+                type: 'FeatureCollection',
+                features: [
+                    {"type":"Feature","properties":{"name":"China"},"geometry":{"type":"Polygon","coordinates":[[[73.4,18.1],[135.1,18.1],[135.1,53.5],[73.4,53.5],[73.4,18.1]]]}},
+                    {"type":"Feature","properties":{"name":"United States"},"geometry":{"type":"Polygon","coordinates":[[[-179.2,18.9],[-66.9,18.9],[-66.9,71.3],[-179.2,71.3],[-179.2,18.9]]]}},
+                    {"type":"Feature","properties":{"name":"Russia"},"geometry":{"type":"Polygon","coordinates":[[[20.1,41.2],[179.9,41.2],[179.9,81.9],[20.1,81.9],[20.1,41.2]]]}},
+                    {"type":"Feature","properties":{"name":"Canada"},"geometry":{"type":"Polygon","coordinates":[[[-141.0,41.7],[-52.6,41.7],[-52.6,83.2],[-141.0,83.2],[-141.0,41.7]]]}},
+                    {"type":"Feature","properties":{"name":"Brazil"},"geometry":{"type":"Polygon","coordinates":[[[-74.0,-33.7],[-32.3,-33.7],[-32.3,5.2],[-74.0,5.2],[-74.0,-33.7]]]}},
+                    {"type":"Feature","properties":{"name":"Australia"},"geometry":{"type":"Polygon","coordinates":[[[112.9,-43.7],[153.4,-43.7],[153.4,-10.4],[112.9,-10.4],[112.9,-43.7]]]}},
+                    {"type":"Feature","properties":{"name":"India"},"geometry":{"type":"Polygon","coordinates":[[[68.2,6.7],[97.4,6.7],[97.4,35.5],[68.2,35.5],[68.2,6.7]]]}},
+                    {"type":"Feature","properties":{"name":"Japan"},"geometry":{"type":"Polygon","coordinates":[[[129.9,30.3],[145.8,30.3],[145.8,45.5],[129.9,45.5],[129.9,30.3]]]}},
+                    {"type":"Feature","properties":{"name":"Germany"},"geometry":{"type":"Polygon","coordinates":[[[5.8,47.3],[15.2,47.3],[15.2,55.1],[5.8,55.1],[5.8,47.3]]]}},
+                    {"type":"Feature","properties":{"name":"United Kingdom"},"geometry":{"type":"Polygon","coordinates":[[[-8.4,50.7],[1.7,50.7],[1.7,58.6],[-8.4,58.6],[-8.4,50.7]]]}},
+                    {"type":"Feature","properties":{"name":"France"},"geometry":{"type":"Polygon","coordinates":[[[-5.1,41.2],[9.5,41.2],[9.5,51.2],[-5.1,51.2],[-5.1,41.2]]]}},
+                    {"type":"Feature","properties":{"name":"Italy"},"geometry":{"type":"Polygon","coordinates":[[[6.6,35.4],[18.5,35.4],[18.5,47.0],[6.6,47.0],[6.6,35.4]]]}},
+                    {"type":"Feature","properties":{"name":"South Korea"},"geometry":{"type":"Polygon","coordinates":[[[124.7,33.1],[131.1,33.1],[131.1,38.6],[124.7,38.6],[124.7,33.1]]]}},
+                    {"type":"Feature","properties":{"name":"Singapore"},"geometry":{"type":"Polygon","coordinates":[[[103.6,1.1],[104.0,1.1],[104.0,1.4],[103.6,1.4],[103.6,1.1]]]}},
+                    {"type":"Feature","properties":{"name":"Malaysia"},"geometry":{"type":"Polygon","coordinates":[[[95.9,-6.2],[119.2,-6.2],[119.2,7.3],[95.9,7.3],[95.9,-6.2]]]}},
+                    {"type":"Feature","properties":{"name":"Indonesia"},"geometry":{"type":"Polygon","coordinates":[[[94.5,-11.2],[141.0,-11.2],[141.0,6.2],[94.5,6.2],[94.5,-11.2]]]}},
+                    {"type":"Feature","properties":{"name":"Thailand"},"geometry":{"type":"Polygon","coordinates":[[[92.3,5.5],[105.6,5.5],[105.6,20.5],[92.3,20.5],[92.3,5.5]]]}},
+                    {"type":"Feature","properties":{"name":"Vietnam"},"geometry":{"type":"Polygon","coordinates":[[[102.1,8.4],[109.5,8.4],[109.5,23.5],[102.1,23.5],[102.1,8.4]]]}},
+                    {"type":"Feature","properties":{"name":"Turkey"},"geometry":{"type":"Polygon","coordinates":[[[25.6,35.6],[44.8,35.6],[44.8,42.2],[25.6,42.2],[25.6,35.6]]]}},
+                    {"type":"Feature","properties":{"name":"Iran"},"geometry":{"type":"Polygon","coordinates":[[[44.0,25.0],[63.3,25.0],[63.3,39.8],[44.0,39.8],[44.0,25.0]]]}},
+                    {"type":"Feature","properties":{"name":"Netherlands"},"geometry":{"type":"Polygon","coordinates":[[[3.3,50.7],[7.2,50.7],[7.2,53.5],[3.3,53.5],[3.3,50.7]]]}},
+                    {"type":"Feature","properties":{"name":"Sweden"},"geometry":{"type":"Polygon","coordinates":[[[11.1,55.3],[24.1,55.3],[24.1,69.1],[11.1,69.1],[11.1,55.3]]]}},
+                    {"type":"Feature","properties":{"name":"Switzerland"},"geometry":{"type":"Polygon","coordinates":[[[5.9,45.8],[10.5,45.8],[10.5,47.9],[5.9,47.9],[5.9,45.8]]]}},
+                    {"type":"Feature","properties":{"name":"Spain"},"geometry":{"type":"Polygon","coordinates":[[[-9.4,35.9],[-0.5,35.9],[-0.5,43.7],[-9.4,43.7],[-9.4,35.9]]]}},
+                    {"type":"Feature","properties":{"name":"Ukraine"},"geometry":{"type":"Polygon","coordinates":[[[22.1,44.3],[41.0,44.3],[41.0,52.3],[22.1,52.3],[22.1,44.3]]]}},
+                    {"type":"Feature","properties":{"name":"Poland"},"geometry":{"type":"Polygon","coordinates":[[[14.1,49.0],[24.1,49.0],[24.1,55.6],[14.1,55.6],[14.1,49.0]]]}},
+                    {"type":"Feature","properties":{"name":"Canada"},"geometry":{"type":"Polygon","coordinates":[[[-141.0,41.7],[-52.6,41.7],[-52.6,83.2],[-141.0,83.2],[-141.0,41.7]]]}}
+                ]
+            };
+            echarts.registerMap('world', worldMapData);
+            
             var mc = echarts.init(document.getElementById('worldMap'));
             mc.setOption({
-                tooltip:{trigger:'item',formatter:p=>p.name+': '+(p.value||0)+' 次'},
-                visualMap:{show:false,min:0,max:data.maxCount||100,
-                    inRange:{color:['#1a1a3e','#0d47a1','#1565c0','#00d4ff','#06b6d4']}},
-                series:[{type:'map',map:'world',roam:true,
-                    emphasis:{label:{show:true,color:'#fff'},itemStyle:{areaColor:'#00d4ff'}},
-                    itemStyle:{borderColor:'#333'},data:data.countries}]
+                tooltip:{trigger:'item',formatter:p=>p.name+': '+(p.value||0)+' 次攻击'},
+                visualMap:{
+                    show:true,
+                    left:'right',
+                    bottom:'10%',
+                    min:0,
+                    max:data.maxCount||100,
+                    inRange:{color:['#1a1a3e','#0d47a1','#1565c0','#00d4ff','#06b6d4']},
+                    textStyle:{color:'#94a3b8'}
+                },
+                series:[{
+                    type:'map',
+                    map:'world',
+                    roam:true,
+                    zoom:1.2,
+                    emphasis:{
+                        label:{show:true,color:'#fff'},
+                        itemStyle:{areaColor:'#00d4ff'}
+                    },
+                    itemStyle:{
+                        borderColor:'#333',
+                        areaColor:'#1e293b'
+                    },
+                    data:data.countries
+                }]
             });
             window.addEventListener('resize',()=>mc.resize());
+        }).catch(err=>{
+            console.error('地图数据加载失败:', err);
+            var mc = echarts.init(document.getElementById('worldMap'));
+            mc.setOption({
+                title:{text:'地图加载失败',left:'center',top:'center',textStyle:{color:'#94a3b8'}},
+                tooltip:{trigger:'item'}
+            });
         });
     </script>
 </body>
