@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HFish 威胁情报自动化生成脚本 v6.1 (优化版)
+HFish 威胁情报自动化生成脚本 v6.0
 功能：全蜜罐数据采集 + 弱口令字典 + 攻击趋势图 + 世界地图 +
       攻击时段热力图 + 数据对比 + CSV导出 + 分蜜罐统计
 """
@@ -136,7 +136,7 @@ def process_data(raw_logs):
 
 # ==================== 5. 世界地图数据生成 ====================
 def generate_map_data(df):
-    """将国家统计数据转换为世界地图所需格式，返回JSON字符串"""
+    """将国家统计数据转换为世界地图所需格式"""
     name_map = {
         "中国": "China", "美国": "United States", "俄罗斯": "Russia",
         "加拿大": "Canada", "新加坡": "Singapore", "日本": "Japan",
@@ -152,8 +152,8 @@ def generate_map_data(df):
         cc = df["country"].value_counts().to_dict()
         countries = [{"name": name_map.get(k, k), "value": v} for k, v in cc.items()]
         mx = max(cc.values()) if cc else 1
-        return json.dumps({"countries": countries, "maxCount": mx}, ensure_ascii=False)
-    return json.dumps({"countries": [], "maxCount": 1}, ensure_ascii=False)
+        with open(os.path.join(OUTPUT_DIR, "country_data.json"), "w", encoding="utf-8") as f:
+            json.dump({"countries": countries, "maxCount": mx}, f, ensure_ascii=False)
 
 # ==================== 6. CSV数据导出 ====================
 def export_csv(df):
@@ -195,8 +195,8 @@ def generate_html(df, stats, accounts, week_compare):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFish 威胁情报监控中心</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -209,16 +209,14 @@ def generate_html(df, stats, accounts, week_compare):
             text-align: center; padding: 30px; margin-bottom: 30px;
             background: linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(124,58,237,0.06) 100%);
             border-radius: 20px; border: 1px solid rgba(0,212,255,0.12);
-            box-shadow: 0 8px 32px rgba(0,212,255,0.08);
         }
         .header h1 {
             font-size: 2.6em;
             background: linear-gradient(135deg, #00d4ff, #7c3aed);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
-            letter-spacing: 2px;
         }
-        .header .subtitle { color: #94a3b8; font-size: 0.9em; letter-spacing: 1px; }
+        .header .subtitle { color: #94a3b8; font-size: 0.9em; }
         .stats-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 15px; margin-bottom: 30px;
@@ -230,28 +228,21 @@ def generate_html(df, stats, accounts, week_compare):
             position: relative; overflow: hidden;
         }
         .stat-card:hover { transform: translateY(-5px); border-color: #00d4ff; box-shadow: 0 10px 30px rgba(0,212,255,0.15); }
-        .stat-number { font-size: 2.4em; font-weight: 700; color: #00d4ff; text-shadow: 0 0 20px rgba(0,212,255,0.3); }
-        .stat-number.up { color: #4ade80; text-shadow: 0 0 20px rgba(74,222,128,0.3); }
-        .stat-number.down { color: #f87171; text-shadow: 0 0 20px rgba(248,113,113,0.3); }
-        .stat-label { color: #94a3b8; font-size: 0.85em; margin-top: 6px; letter-spacing: 1px; }
+        .stat-number { font-size: 2.4em; font-weight: 700; color: #00d4ff; }
+        .stat-number.up { color: #4ade80; }
+        .stat-number.down { color: #f87171; }
+        .stat-label { color: #94a3b8; font-size: 0.85em; margin-top: 6px; }
         .section {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(0,212,255,0.1);
             border-radius: 20px; padding: 30px; margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-        .section:hover {
-            border-color: rgba(0,212,255,0.25);
-            box-shadow: 0 8px 30px rgba(0,212,255,0.1);
         }
         .section-title {
             font-size: 1.3em; color: #00d4ff; margin-bottom: 20px;
             border-bottom: 1px solid rgba(0,212,255,0.1); padding-bottom: 12px;
             display: flex; align-items: center; gap: 10px;
-            text-shadow: 0 0 15px rgba(0,212,255,0.3);
         }
         .chart-container { width: 100%; height: 380px; }
-        .map-container { width: 100%; height: 500px; border-radius: 12px; position: relative; overflow: hidden; background: #0f172a; }
+        .map-container { width: 100%; height: 500px; }
         .heatmap-container { width: 100%; height: 300px; }
         .honeypot-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px;
@@ -260,30 +251,21 @@ def generate_html(df, stats, accounts, week_compare):
             background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(124,58,237,0.04));
             border: 1px solid rgba(0,212,255,0.12); border-radius: 14px;
             padding: 20px; text-align: center; transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .hp-item:hover { transform: translateY(-3px); border-color: #00d4ff; box-shadow: 0 8px 25px rgba(0,212,255,0.15); }
+        .hp-item:hover { transform: translateY(-3px); border-color: #00d4ff; }
         .hp-name { color: #94a3b8; font-size: 0.8em; margin-bottom: 8px; }
-        .hp-count { font-size: 1.8em; font-weight: 700; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.3); }
+        .hp-count { font-size: 1.8em; font-weight: 700; color: #00d4ff; }
         .hp-zero { color: #475569; }
         .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
         .list-item {
             background: rgba(0,0,0,0.35); border: 1px solid rgba(0,212,255,0.08);
             border-radius: 14px; padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
         }
-        .list-item:hover {
-            border-color: rgba(0,212,255,0.2);
-            box-shadow: 0 6px 20px rgba(0,212,255,0.1);
-        }
-        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; text-shadow: 0 0 10px rgba(0,212,255,0.2); }
+        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; }
         .rank-item {
             display: flex; justify-content: space-between; padding: 8px 0;
             border-bottom: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; font-size: 0.88em;
-            transition: all 0.2s ease;
         }
-        .rank-item:hover { background: rgba(0,212,255,0.05); padding-left: 8px; }
         .rank-value { font-weight: 700; color: #00d4ff; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.88em; color: #cbd5e1; }
         .data-table th { background: rgba(0,212,255,0.12); color: #00d4ff; padding: 12px; text-align: left; }
@@ -292,12 +274,6 @@ def generate_html(df, stats, accounts, week_compare):
         .badge {
             background: rgba(0,212,255,0.15); color: #00d4ff;
             padding: 4px 10px; border-radius: 16px; font-size: 0.82em;
-            border: 1px solid rgba(0,212,255,0.2);
-            transition: all 0.2s ease;
-        }
-        .badge:hover {
-            background: rgba(0,212,255,0.25);
-            box-shadow: 0 0 10px rgba(0,212,255,0.3);
         }
         .footer { text-align: center; color: #64748b; margin-top: 40px; font-size: 0.85em; }
         .warning { color: #f87171; font-weight: 500; }
@@ -317,11 +293,13 @@ def generate_html(df, stats, accounts, week_compare):
 </head>
 <body>
     <div class="container">
+        <!-- 头部 -->
         <div class="header">
             <h1>🛡️ HFish 威胁情报监控中心</h1>
             <p class="subtitle">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
         </div>
 
+        <!-- 统计卡片 -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-number">{{ stats.total_attacks }}</div>
@@ -347,16 +325,19 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
+        <!-- 攻击趋势图 -->
         <div class="section">
             <h2 class="section-title">📈 攻击趋势（近7天）</h2>
             <div class="chart-container"><canvas id="attackChart"></canvas></div>
         </div>
 
+        <!-- 攻击时段热力图 -->
         <div class="section">
             <h2 class="section-title">🔥 攻击时段分布（24小时）</h2>
             <div class="heatmap-container"><canvas id="heatmapChart"></canvas></div>
         </div>
 
+        <!-- 周对比 -->
         <div class="section">
             <h2 class="section-title">📊 本周 vs 上周攻击对比</h2>
             <div class="compare-box">
@@ -378,11 +359,13 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
+        <!-- 世界地图 -->
         <div class="section">
             <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
             <div class="map-container" id="worldMap"></div>
         </div>
 
+        <!-- 分蜜罐统计 -->
         <div class="section">
             <h2 class="section-title">🎯 各蜜罐受攻击次数</h2>
             <div class="honeypot-grid">
@@ -395,6 +378,7 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
+        <!-- 攻击统计分析 -->
         <div class="section">
             <h2 class="section-title">📊 攻击统计分析</h2>
             <div class="top-list">
@@ -422,6 +406,7 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
+        <!-- 最新攻击详情 -->
         <div class="section">
             <h2 class="section-title">📋 最新攻击详情记录（前100条）</h2>
             <div style="overflow-x:auto; max-height:400px; overflow-y:auto;">
@@ -446,164 +431,92 @@ def generate_html(df, stats, accounts, week_compare):
         </div>
     </div>
 
+    <!-- 图表脚本 -->
     <script>
-        // --- 1. 攻击趋势折线图 ---
-        const attackCtx = document.getElementById('attackChart').getContext('2d');
-        // 直接在 JS 中接收 JSON 对象
+        // 攻击趋势折线图
+        const ctx = document.getElementById('attackChart').getContext('2d');
         const trendData = {{ chart_data | safe }};
-        
-        new Chart(attackCtx, {
-            type: 'line',
-            data: {
-                labels: trendData.dates || [],
-                datasets: [{
-                    label: '攻击次数',
-                    data: trendData.counts || [],
-                    borderColor: '#00d4ff',
-                    backgroundColor: 'rgba(0,212,255,0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#00d4ff',
-                    pointRadius: 5
+        new Chart(ctx, {
+            type:'line',
+            data:{
+                labels:trendData.dates,
+                datasets:[{
+                    label:'攻击次数',data:trendData.counts,
+                    borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',
+                    fill:true,tension:0.4,
+                    pointBackgroundColor:'#00d4ff',pointRadius:5
                 }]
             },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8' } } },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+            options:{
+                responsive:true,maintainAspectRatio:false,
+                plugins:{legend:{labels:{color:'#94a3b8'}}},
+                scales:{
+                    x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
+                    y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
                 }
             }
         });
 
-        // --- 2. 攻击时段热力图 ---
+        // 攻击时段热力图
         const heatCtx = document.getElementById('heatmapChart').getContext('2d');
         const heatData = {{ heatmap_data | safe }};
-        
         new Chart(heatCtx, {
-            type: 'bar',
-            data: {
-                labels: Array.from({length: 24}, (_, i) => i + '时'),
-                datasets: [{
-                    label: '攻击次数',
-                    data: heatData,
-                    backgroundColor: function(context) {
-                        const val = context.raw;
-                        if(val > 200) return '#7c3aed';
-                        if(val > 100) return '#00d4ff';
-                        if(val > 50) return '#0284c7';
+            type:'bar',
+            data:{
+                labels:['0时','1时','2时','3时','4时','5时','6时','7时','8时','9时','10时','11时',
+                        '12时','13时','14时','15时','16时','17时','18时','19时','20时','21时','22时','23时'],
+                datasets:[{
+                    label:'攻击次数',
+                    data:heatData,
+                    backgroundColor:function(context){
+                        var value = context.raw;
+                        if(value > 200) return '#7c3aed';
+                        if(value > 100) return '#00d4ff';
+                        if(value > 50) return '#0284c7';
                         return '#0d47a1';
                     },
-                    borderRadius: 6
+                    borderRadius:6
                 }]
             },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8' } } },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+            options:{
+                responsive:true,maintainAspectRatio:false,
+                plugins:{legend:{labels:{color:'#94a3b8'}}},
+                scales:{
+                    x:{ticks:{color:'#94a3b8'},grid:{display:false}},
+                    y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
                 }
             }
         });
+    </script>
 
-        // --- 3. 世界地图 (ECharts) ---
-        const mapDom = document.getElementById('worldMap');
-        const mapChart = echarts.init(mapDom);
-
-        const countryNameMap = {
-            "China": "中国", "United States": "美国", "Russia": "俄罗斯", "Canada": "加拿大",
-            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本",
-            "Germany": "德国", "United Kingdom": "英国", "France": "法国", "Italy": "意大利",
-            "South Korea": "韩国", "Singapore": "新加坡", "Malaysia": "马来西亚", "Indonesia": "印度尼西亚",
-            "Thailand": "泰国", "Vietnam": "越南", "Turkey": "土耳其", "Iran": "伊朗",
-            "Netherlands": "荷兰", "Sweden": "瑞典", "Switzerland": "瑞士", "Spain": "西班牙",
-            "Ukraine": "乌克兰", "Poland": "波兰", "Mexico": "墨西哥", "Nigeria": "尼日利亚",
-            "Egypt": "埃及", "South Africa": "南非", "Argentina": "阿根廷", "Chile": "智利",
-            "Saudi Arabia": "沙特阿拉伯", "United Arab Emirates": "阿联酋", "Israel": "以色列",
-            "Pakistan": "巴基斯坦", "Bangladesh": "孟加拉", "Philippines": "菲律宾", "New Zealand": "新西兰",
-            "Norway": "挪威", "Denmark": "丹麦", "Finland": "芬兰", "Ireland": "爱尔兰",
-            "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利"
-        };
-
-        // 直接使用内嵌的地图数据
-        const mapData = {{ map_data | safe }};
-        
-        const mapOptions = {
-            backgroundColor: 'transparent',
-            tooltip: {
-                trigger: 'item',
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                borderColor: 'rgba(0, 212, 255, 0.3)',
-                textStyle: { color: '#e2e8f0' },
-                formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
-            },
-            visualMap: {
-                show: true, left: 'left', bottom: '5%',
-                min: 0, max: mapData.maxCount || 100,
-                text: ['高', '低'],
-                textStyle: { color: '#94a3b8' },
-                inRange: { color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff'] }
-            },
-            series: [{
-                type: 'map',
-                map: 'world',
-                roam: true,
-                zoom: 1.2,
-                center: [10, 10],
-                itemStyle: {
-                    borderColor: '#334155', borderWidth: 1,
-                    areaColor: '#1e293b'
-                },
-                emphasis: {
-                    itemStyle: {
-                        areaColor: '#00d4ff',
-                        borderColor: '#00d4ff',
-                        borderWidth: 2
-                    },
-                    label: { show: true, color: '#fff' }
-                },
-                data: mapData.countries
-            }]
-        };
-
-        // 加载世界地图
-        (function() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/js/world.js';
-            script.onload = function() {
-                mapChart.setOption(mapOptions);
-            };
-            script.onerror = function() {
-                // 如果无法加载地图数据，显示简化的统计信息
-                mapDom.innerHTML = '<div style="color:#94a3b8;text-align:center;padding-top:150px;font-size:14px;">地图数据加载失败<br/>攻击来源国家统计:</div>';
-            };
-            document.head.appendChild(script);
-        })();
-
-        window.addEventListener('resize', () => mapChart.resize());
+    <!-- 世界地图 -->
+    <script>
+        fetch('country_data.json').then(res=>res.json()).then(data=>{
+            var mc = echarts.init(document.getElementById('worldMap'));
+            mc.setOption({
+                tooltip:{trigger:'item',formatter:p=>p.name+': '+(p.value||0)+' 次'},
+                visualMap:{show:false,min:0,max:data.maxCount||100,
+                    inRange:{color:['#1a1a3e','#0d47a1','#1565c0','#00d4ff','#06b6d4']}},
+                series:[{type:'map',map:'world',roam:true,
+                    emphasis:{label:{show:true,color:'#fff'},itemStyle:{areaColor:'#00d4ff'}},
+                    itemStyle:{borderColor:'#333'},data:data.countries}]
+            });
+            window.addEventListener('resize',()=>mc.resize());
+        });
     </script>
 </body>
 </html>
 """)
 
-    # --- 变量准备 ---
     chart_data = generate_chart_data(df)
     heatmap_data = json.dumps(stats.get("heatmap_data", [0]*24))
-    map_data = generate_map_data(df)
     top_passwords = get_top_passwords(accounts)
     top_usernames = get_top_usernames(accounts)
 
-    # --- 渲染 ---
     html_content = template.render(
-        df=df, 
-        stats=stats, 
-        chart_data=chart_data,
+        df=df, stats=stats, chart_data=chart_data,
         heatmap_data=heatmap_data,
-        map_data=map_data,
-        top_passwords=top_passwords, 
-        top_usernames=top_usernames,
+        top_passwords=top_passwords, top_usernames=top_usernames,
         week_compare=week_compare,
         account_count=len(accounts),
         last_update=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -629,12 +542,13 @@ def main():
         print(f"📥 攻击数据: {len(logs)} 条 | 账号数据: {len(accounts)} 条 | 上周: {len(last_week_logs)} 条")
         df, stats = process_data(logs)
         week_compare = compare_weeks(df, last_week_logs)
-        
-        # 执行导出与生成
+        print(f"📊 总攻击 {stats['total_attacks']} 次 | 独立IP {stats['unique_ips']} 个 | 活跃蜜罐 {stats['active_honeypots']} 个")
+        print(f"📈 较上周: {week_compare['trend']} ({week_compare['change']}次)")
+
         generate_map_data(df)
         export_csv(df)
         generate_html(df, stats, accounts, week_compare)
-        print("✨ v6.1 (优化版) 所有任务完成！")
+        print("✨ v6.0 所有任务完成！")
     else:
         print("⚠️ 未拉取到攻击数据")
 
