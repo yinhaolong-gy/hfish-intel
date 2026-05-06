@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HFish 威胁情报自动化生成脚本 v6.0
+HFish 威胁情报自动化生成脚本 v6.1 (优化版)
 功能：全蜜罐数据采集 + 弱口令字典 + 攻击趋势图 + 世界地图 +
       攻击时段热力图 + 数据对比 + CSV导出 + 分蜜罐统计
 """
@@ -195,8 +195,8 @@ def generate_html(df, stats, accounts, week_compare):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFish 威胁情报监控中心</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -317,13 +317,11 @@ def generate_html(df, stats, accounts, week_compare):
 </head>
 <body>
     <div class="container">
-        <!-- 头部 -->
         <div class="header">
             <h1>🛡️ HFish 威胁情报监控中心</h1>
             <p class="subtitle">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
         </div>
 
-        <!-- 统计卡片 -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-number">{{ stats.total_attacks }}</div>
@@ -349,19 +347,16 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
-        <!-- 攻击趋势图 -->
         <div class="section">
             <h2 class="section-title">📈 攻击趋势（近7天）</h2>
             <div class="chart-container"><canvas id="attackChart"></canvas></div>
         </div>
 
-        <!-- 攻击时段热力图 -->
         <div class="section">
             <h2 class="section-title">🔥 攻击时段分布（24小时）</h2>
             <div class="heatmap-container"><canvas id="heatmapChart"></canvas></div>
         </div>
 
-        <!-- 周对比 -->
         <div class="section">
             <h2 class="section-title">📊 本周 vs 上周攻击对比</h2>
             <div class="compare-box">
@@ -383,13 +378,11 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
-        <!-- 世界地图 -->
         <div class="section">
             <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
             <div class="map-container" id="worldMap"></div>
         </div>
 
-        <!-- 分蜜罐统计 -->
         <div class="section">
             <h2 class="section-title">🎯 各蜜罐受攻击次数</h2>
             <div class="honeypot-grid">
@@ -402,7 +395,6 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
-        <!-- 攻击统计分析 -->
         <div class="section">
             <h2 class="section-title">📊 攻击统计分析</h2>
             <div class="top-list">
@@ -430,7 +422,6 @@ def generate_html(df, stats, accounts, week_compare):
             </div>
         </div>
 
-        <!-- 最新攻击详情 -->
         <div class="section">
             <h2 class="section-title">📋 最新攻击详情记录（前100条）</h2>
             <div style="overflow-x:auto; max-height:400px; overflow-y:auto;">
@@ -455,205 +446,128 @@ def generate_html(df, stats, accounts, week_compare):
         </div>
     </div>
 
-    <!-- 图表脚本 -->
     <script>
-        // 攻击趋势折线图
-        const ctx = document.getElementById('attackChart').getContext('2d');
+        // --- 1. 攻击趋势折线图 ---
+        const attackCtx = document.getElementById('attackChart').getContext('2d');
+        // 直接在 JS 中接收 JSON 对象
         const trendData = {{ chart_data | safe }};
-        new Chart(ctx, {
-            type:'line',
-            data:{
-                labels:trendData.dates,
-                datasets:[{
-                    label:'攻击次数',data:trendData.counts,
-                    borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.1)',
-                    fill:true,tension:0.4,
-                    pointBackgroundColor:'#00d4ff',pointRadius:5
+        
+        new Chart(attackCtx, {
+            type: 'line',
+            data: {
+                labels: trendData.dates || [],
+                datasets: [{
+                    label: '攻击次数',
+                    data: trendData.counts || [],
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0,212,255,0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#00d4ff',
+                    pointRadius: 5
                 }]
             },
-            options:{
-                responsive:true,maintainAspectRatio:false,
-                plugins:{legend:{labels:{color:'#94a3b8'}}},
-                scales:{
-                    x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
-                    y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
                 }
             }
         });
 
-        // 攻击时段热力图
+        // --- 2. 攻击时段热力图 ---
         const heatCtx = document.getElementById('heatmapChart').getContext('2d');
         const heatData = {{ heatmap_data | safe }};
+        
         new Chart(heatCtx, {
-            type:'bar',
-            data:{
-                labels:['0时','1时','2时','3时','4时','5时','6时','7时','8时','9时','10时','11时',
-                        '12时','13时','14时','15时','16时','17时','18时','19时','20时','21时','22时','23时'],
-                datasets:[{
-                    label:'攻击次数',
-                    data:heatData,
-                    backgroundColor:function(context){
-                        var value = context.raw;
-                        if(value > 200) return '#7c3aed';
-                        if(value > 100) return '#00d4ff';
-                        if(value > 50) return '#0284c7';
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => i + '时'),
+                datasets: [{
+                    label: '攻击次数',
+                    data: heatData,
+                    backgroundColor: function(context) {
+                        const val = context.raw;
+                        if(val > 200) return '#7c3aed';
+                        if(val > 100) return '#00d4ff';
+                        if(val > 50) return '#0284c7';
                         return '#0d47a1';
                     },
-                    borderRadius:6
+                    borderRadius: 6
                 }]
             },
-            options:{
-                responsive:true,maintainAspectRatio:false,
-                plugins:{legend:{labels:{color:'#94a3b8'}}},
-                scales:{
-                    x:{ticks:{color:'#94a3b8'},grid:{display:false}},
-                    y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
                 }
             }
         });
-    </script>
 
-    <!-- 世界地图 -->
-    <script>
-        var mapChart = echarts.init(document.getElementById('worldMap'));
+        // --- 3. 世界地图 (ECharts) ---
+        const mapDom = document.getElementById('worldMap');
+        const mapChart = echarts.init(mapDom);
         
-        var countryNameMap = {
+        // 映射表
+        const countryNameMap = {
             "China": "中国", "United States": "美国", "Russia": "俄罗斯", "Canada": "加拿大",
-            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本",
-            "Germany": "德国", "United Kingdom": "英国", "France": "法国", "Italy": "意大利",
-            "South Korea": "韩国", "Singapore": "新加坡", "Malaysia": "马来西亚", "Indonesia": "印度尼西亚",
-            "Thailand": "泰国", "Vietnam": "越南", "Turkey": "土耳其", "Iran": "伊朗",
-            "Netherlands": "荷兰", "Sweden": "瑞典", "Switzerland": "瑞士", "Spain": "西班牙",
-            "Ukraine": "乌克兰", "Poland": "波兰", "Mexico": "墨西哥", "Nigeria": "尼日利亚",
-            "Egypt": "埃及", "South Africa": "南非", "Argentina": "阿根廷", "Chile": "智利",
-            "Saudi Arabia": "沙特阿拉伯", "United Arab Emirates": "阿联酋", "Israel": "以色列",
-            "Pakistan": "巴基斯坦", "Bangladesh": "孟加拉", "Philippines": "菲律宾", "New Zealand": "新西兰",
-            "Norway": "挪威", "Denmark": "丹麦", "Finland": "芬兰", "Ireland": "爱尔兰",
-            "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利",
-            "Czech Republic": "捷克", "Belgium": "比利时", "Romania": "罗马尼亚", "Bulgaria": "保加利亚",
-            "Croatia": "克罗地亚", "Serbia": "塞尔维亚", "Slovakia": "斯洛伐克", "Slovenia": "斯洛文尼亚",
-            "Iceland": "冰岛", "Estonia": "爱沙尼亚", "Latvia": "拉脱维亚", "Lithuania": "立陶宛",
-            "Belarus": "白俄罗斯", "Moldova": "摩尔多瓦", "Kazakhstan": "哈萨克斯坦", "Uzbekistan": "乌兹别克斯坦",
-            "Turkmenistan": "土库曼斯坦", "Kyrgyzstan": "吉尔吉斯斯坦", "Tajikistan": "塔吉克斯坦",
-            "Afghanistan": "阿富汗", "Iraq": "伊拉克", "Syria": "叙利亚", "Lebanon": "黎巴嫩",
-            "Jordan": "约旦", "Yemen": "也门", "Oman": "阿曼", "Qatar": "卡塔尔",
-            "Bahrain": "巴林", "Kuwait": "科威特", "Georgia": "格鲁吉亚", "Armenia": "亚美尼亚",
-            "Azerbaijan": "阿塞拜疆", "Mongolia": "蒙古", "North Korea": "朝鲜", "Taiwan": "台湾",
-            "Hong Kong": "香港", "Macau": "澳门", "Myanmar": "缅甸", "Cambodia": "柬埔寨",
-            "Laos": "老挝", "Brunei": "文莱", "Sri Lanka": "斯里兰卡", "Nepal": "尼泊尔",
-            "Bhutan": "不丹", "Maldives": "马尔代夫", "Colombia": "哥伦比亚", "Venezuela": "委内瑞拉",
-            "Peru": "秘鲁", "Bolivia": "玻利维亚", "Paraguay": "巴拉圭", "Uruguay": "乌拉圭",
-            "Ecuador": "厄瓜多尔", "Guyana": "圭亚那", "Suriname": "苏里南", "Panama": "巴拿马",
-            "Costa Rica": "哥斯达黎加", "Nicaragua": "尼加拉瓜", "Honduras": "洪都拉斯",
-            "El Salvador": "萨尔瓦多", "Guatemala": "危地马拉", "Belize": "伯利兹", "Cuba": "古巴",
-            "Jamaica": "牙买加", "Haiti": "海地", "Dominican Republic": "多米尼加", "Puerto Rico": "波多黎各"
+            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本"
         };
-        
+
+        // 从本地读取国家 JSON
         fetch('country_data.json').then(res => res.json()).then(data => {
-            mapChart.showLoading();
             fetch('https://geo.datav.aliyun.com/areas_v3/bound/world.json')
-            .then(response => response.json())
+            .then(res => res.json())
             .then(worldJson => {
                 echarts.registerMap('world', worldJson);
-                
-                var chartData = data.countries.map(c => ({
-                    name: c.name,
-                    value: c.value
-                }));
-                
-                var maxVal = data.maxCount || 100;
-                
-                var option = {
+                const mapOptions = {
                     backgroundColor: 'transparent',
                     tooltip: {
                         trigger: 'item',
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        borderColor: 'rgba(0, 212, 255, 0.3)',
-                        textStyle: { color: '#e2e8f0' },
-                        formatter: function(params) {
-                            var name = countryNameMap[params.name] || params.name;
-                            return name + '<br/>攻击次数: ' + (params.value || 0);
-                        }
+                        formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
                     },
                     visualMap: {
-                        show: true,
-                        left: 'left',
-                        bottom: '5%',
-                        min: 0,
-                        max: maxVal,
-                        text: ['高', '低'],
-                        textStyle: { color: '#94a3b8' },
-                        inRange: {
-                            color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff', '#06b6d4']
-                        },
-                        calculable: true
+                        min: 0, max: data.maxCount || 100,
+                        inRange: { color: ['#1e293b', '#00d4ff', '#06b6d4'] },
+                        textStyle: { color: '#94a3b8' }
                     },
                     geo: {
-                        map: 'world',
-                        roam: true,
-                        scaleLimit: { min: 1, max: 8 },
-                        zoom: 1.2,
-                        center: [10, 10],
-                        label: { show: false },
-                        itemStyle: {
-                            borderColor: '#334155',
-                            borderWidth: 1,
-                            areaColor: '#1e293b',
-                            shadowColor: 'rgba(0, 0, 0, 0.5)',
-                            shadowBlur: 10
-                        },
-                        emphasis: {
-                            itemStyle: {
-                                areaColor: '#00d4ff',
-                                borderColor: '#00d4ff',
-                                borderWidth: 2
-                            },
-                            label: {
-                                show: true,
-                                color: '#fff',
-                                fontSize: 12
-                            }
-                        },
-                        select: {
-                            disabled: true
-                        }
+                        map: 'world', roam: true, zoom: 1.2,
+                        itemStyle: { areaColor: '#1e293b', borderColor: '#334155' },
+                        emphasis: { itemStyle: { areaColor: '#00d4ff' } }
                     },
-                    series: [{
-                        name: '攻击分布',
-                        type: 'map',
-                        geoIndex: 0,
-                        data: chartData
-                    }]
+                    series: [{ type: 'map', geoIndex: 0, data: data.countries }]
                 };
-                
-                mapChart.setOption(option);
-                mapChart.hideLoading();
-                
-                window.addEventListener('resize', function() {
-                    mapChart.resize();
-                });
-            }).catch(function() {
-                mapChart.hideLoading();
-                document.getElementById('worldMap').innerHTML = '<div style="text-align:center;padding-top:180px;color:#94a3b8;font-size:14px;">地图加载失败，请检查网络连接</div>';
+                mapChart.setOption(mapOptions);
             });
-        }).catch(function() {
-            mapChart.hideLoading();
-            document.getElementById('worldMap').innerHTML = '<div style="text-align:center;padding-top:180px;color:#94a3b8;font-size:14px;">暂无攻击数据</div>';
+        }).catch(() => {
+            mapDom.innerHTML = '<div style="color:#666;text-align:center;padding-top:150px;">暂无攻击源地理数据</div>';
         });
+
+        window.addEventListener('resize', () => mapChart.resize());
     </script>
 </body>
 </html>
 """)
 
+    # --- 变量准备 ---
     chart_data = generate_chart_data(df)
     heatmap_data = json.dumps(stats.get("heatmap_data", [0]*24))
     top_passwords = get_top_passwords(accounts)
     top_usernames = get_top_usernames(accounts)
 
+    # --- 渲染 ---
     html_content = template.render(
-        df=df, stats=stats, chart_data=chart_data,
+        df=df, 
+        stats=stats, 
+        chart_data=chart_data,
         heatmap_data=heatmap_data,
-        top_passwords=top_passwords, top_usernames=top_usernames,
+        top_passwords=top_passwords, 
+        top_usernames=top_usernames,
         week_compare=week_compare,
         account_count=len(accounts),
         last_update=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -679,13 +593,12 @@ def main():
         print(f"📥 攻击数据: {len(logs)} 条 | 账号数据: {len(accounts)} 条 | 上周: {len(last_week_logs)} 条")
         df, stats = process_data(logs)
         week_compare = compare_weeks(df, last_week_logs)
-        print(f"📊 总攻击 {stats['total_attacks']} 次 | 独立IP {stats['unique_ips']} 个 | 活跃蜜罐 {stats['active_honeypots']} 个")
-        print(f"📈 较上周: {week_compare['trend']} ({week_compare['change']}次)")
-
+        
+        # 执行导出与生成
         generate_map_data(df)
         export_csv(df)
         generate_html(df, stats, accounts, week_compare)
-        print("✨ v6.0 所有任务完成！")
+        print("✨ v6.1 (优化版) 所有任务完成！")
     else:
         print("⚠️ 未拉取到攻击数据")
 
