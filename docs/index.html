@@ -129,7 +129,7 @@
     <div class="container">
         <div class="header">
             <h1>🛡️ HFish 威胁情报监控中心</h1>
-            <p class="subtitle">📊 监控周期: 2026-02-05 19:32 ~ 2026-05-06 19:32 | 最后更新: 2026-05-06 19:32:05</p>
+            <p class="subtitle">📊 监控周期: 2026-02-05 19:46 ~ 2026-05-06 19:46 | 最后更新: 2026-05-06 19:46:39</p>
         </div>
 
         <div class="stats-grid">
@@ -142,7 +142,7 @@
                 <div class="stat-label">独立攻击IP</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">27017</div>
+                <div class="stat-number">27068</div>
                 <div class="stat-label">账号资产数据</div>
             </div>
             <div class="stat-card">
@@ -284,7 +284,7 @@
                 <div class="list-item">
                     <h3>🔑 弱口令字典 TOP 10</h3>
                     
-                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2925次</span></div>
+                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2938次</span></div>
                     <div class="rank-item"><span class="warning">123</span><span class="rank-value">150次</span></div>
                     <div class="rank-item"><span class="warning">111111</span><span class="rank-value">143次</span></div>
                     <div class="rank-item"><span class="warning">1</span><span class="rank-value">84次</span></div>
@@ -299,7 +299,7 @@
                 <div class="list-item">
                     <h3>👤 高频用户名 TOP 5</h3>
                     
-                    <div class="rank-item"><span>root</span><span class="rank-value">16894次</span></div>
+                    <div class="rank-item"><span>root</span><span class="rank-value">16918次</span></div>
                     <div class="rank-item"><span>test</span><span class="rank-value">198次</span></div>
                     <div class="rank-item"><span>user</span><span class="rank-value">191次</span></div>
                     <div class="rank-item"><span>dell</span><span class="rank-value">181次</span></div>
@@ -1021,7 +1021,7 @@
         </div>
 
         <div class="footer">
-            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-06 19:32:05</p>
+            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-06 19:46:39</p>
         </div>
     </div>
 
@@ -1106,64 +1106,57 @@
             "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利"
         };
 
-        fetch('country_data.json').then(res => res.json()).then(data => {
-            const mapOptions = {
-                backgroundColor: 'transparent',
-                tooltip: {
-                    trigger: 'item',
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    borderColor: 'rgba(0, 212, 255, 0.3)',
-                    textStyle: { color: '#e2e8f0' },
-                    formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
+        // 直接使用内嵌的地图数据
+        const mapData = {"countries": [{"name": "Russia", "value": 3169}, {"name": "欧洲地区", "value": 1187}, {"name": "China", "value": 209}, {"name": "United States", "value": 197}, {"name": "比利时", "value": 67}, {"name": "巴基斯坦", "value": 38}, {"name": "保加利亚", "value": 36}, {"name": "Canada", "value": 27}, {"name": "Ukraine", "value": 11}, {"name": "南非", "value": 8}, {"name": "India", "value": 6}, {"name": "亚太地区", "value": 5}, {"name": "Malaysia", "value": 4}, {"name": "South Korea", "value": 4}, {"name": "肯尼亚", "value": 2}, {"name": "菲律宾", "value": 2}, {"name": "埃塞俄比亚", "value": 2}, {"name": "France", "value": 2}, {"name": "Japan", "value": 2}, {"name": "非洲地区", "value": 2}, {"name": "Brazil", "value": 2}, {"name": "尼加拉瓜", "value": 2}, {"name": "葡萄牙", "value": 1}, {"name": "United Kingdom", "value": 1}, {"name": "委内瑞拉", "value": 1}, {"name": "匈牙利", "value": 1}, {"name": "Italy", "value": 1}, {"name": "特立尼达和多巴哥", "value": 1}, {"name": "哈萨克斯坦", "value": 1}, {"name": "Netherlands", "value": 1}, {"name": "乌兹别克斯坦", "value": 1}, {"name": "玻利维亚", "value": 1}, {"name": "Sweden", "value": 1}, {"name": "伊拉克", "value": 1}, {"name": "巴拉圭", "value": 1}, {"name": "阿根廷", "value": 1}, {"name": "萨尔瓦多", "value": 1}, {"name": "孟加拉", "value": 1}], "maxCount": 3169};
+        
+        const mapOptions = {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                borderColor: 'rgba(0, 212, 255, 0.3)',
+                textStyle: { color: '#e2e8f0' },
+                formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
+            },
+            visualMap: {
+                show: true, left: 'left', bottom: '5%',
+                min: 0, max: mapData.maxCount || 100,
+                text: ['高', '低'],
+                textStyle: { color: '#94a3b8' },
+                inRange: { color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff'] }
+            },
+            series: [{
+                type: 'map',
+                map: 'world',
+                roam: true,
+                zoom: 1.2,
+                center: [10, 10],
+                itemStyle: {
+                    borderColor: '#334155', borderWidth: 1,
+                    areaColor: '#1e293b'
                 },
-                visualMap: {
-                    show: true, left: 'left', bottom: '5%',
-                    min: 0, max: data.maxCount || 100,
-                    text: ['高', '低'],
-                    textStyle: { color: '#94a3b8' },
-                    inRange: { color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff'] }
-                },
-                series: [{
-                    type: 'map',
-                    map: 'world',
-                    roam: true,
-                    zoom: 1.2,
-                    center: [10, 10],
+                emphasis: {
                     itemStyle: {
-                        borderColor: '#334155', borderWidth: 1,
-                        areaColor: '#1e293b'
+                        areaColor: '#00d4ff',
+                        borderColor: '#00d4ff',
+                        borderWidth: 2
                     },
-                    emphasis: {
-                        itemStyle: {
-                            areaColor: '#00d4ff',
-                            borderColor: '#00d4ff',
-                            borderWidth: 2
-                        },
-                        label: { show: true, color: '#fff' }
-                    },
-                    data: data.countries
-                }]
-            };
+                    label: { show: true, color: '#fff' }
+                },
+                data: mapData.countries
+            }]
+        };
 
-            // 使用内置世界地图
-            mapChart.setOption(mapOptions);
-        }).catch(() => {
-            mapDom.innerHTML = '<div style="color:#94a3b8;text-align:center;padding-top:150px;font-size:14px;">暂无攻击源地理数据</div>';
-        });
-
-        // 使用 ECharts 内置世界地图
+        // 加载世界地图
         (function() {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/js/world.js';
             script.onload = function() {
-                if (mapChart.getOption() && mapChart.getOption().series) {
-                    mapChart.setOption({
-                        series: [{
-                            type: 'map',
-                            map: 'world'
-                        }]
-                    });
-                }
+                mapChart.setOption(mapOptions);
+            };
+            script.onerror = function() {
+                // 如果无法加载地图数据，显示简化的统计信息
+                mapDom.innerHTML = '<div style="color:#94a3b8;text-align:center;padding-top:150px;font-size:14px;">地图数据加载失败<br/>攻击来源国家统计:</div>';
             };
             document.head.appendChild(script);
         })();

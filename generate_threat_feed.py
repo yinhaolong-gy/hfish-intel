@@ -136,7 +136,7 @@ def process_data(raw_logs):
 
 # ==================== 5. 世界地图数据生成 ====================
 def generate_map_data(df):
-    """将国家统计数据转换为世界地图所需格式"""
+    """将国家统计数据转换为世界地图所需格式，返回JSON字符串"""
     name_map = {
         "中国": "China", "美国": "United States", "俄罗斯": "Russia",
         "加拿大": "Canada", "新加坡": "Singapore", "日本": "Japan",
@@ -152,8 +152,8 @@ def generate_map_data(df):
         cc = df["country"].value_counts().to_dict()
         countries = [{"name": name_map.get(k, k), "value": v} for k, v in cc.items()]
         mx = max(cc.values()) if cc else 1
-        with open(os.path.join(OUTPUT_DIR, "country_data.json"), "w", encoding="utf-8") as f:
-            json.dump({"countries": countries, "maxCount": mx}, f, ensure_ascii=False)
+        return json.dumps({"countries": countries, "maxCount": mx}, ensure_ascii=False)
+    return json.dumps({"countries": [], "maxCount": 1}, ensure_ascii=False)
 
 # ==================== 6. CSV数据导出 ====================
 def export_csv(df):
@@ -527,64 +527,57 @@ def generate_html(df, stats, accounts, week_compare):
             "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利"
         };
 
-        fetch('country_data.json').then(res => res.json()).then(data => {
-            const mapOptions = {
-                backgroundColor: 'transparent',
-                tooltip: {
-                    trigger: 'item',
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    borderColor: 'rgba(0, 212, 255, 0.3)',
-                    textStyle: { color: '#e2e8f0' },
-                    formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
+        // 直接使用内嵌的地图数据
+        const mapData = {{ map_data | safe }};
+        
+        const mapOptions = {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                borderColor: 'rgba(0, 212, 255, 0.3)',
+                textStyle: { color: '#e2e8f0' },
+                formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
+            },
+            visualMap: {
+                show: true, left: 'left', bottom: '5%',
+                min: 0, max: mapData.maxCount || 100,
+                text: ['高', '低'],
+                textStyle: { color: '#94a3b8' },
+                inRange: { color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff'] }
+            },
+            series: [{
+                type: 'map',
+                map: 'world',
+                roam: true,
+                zoom: 1.2,
+                center: [10, 10],
+                itemStyle: {
+                    borderColor: '#334155', borderWidth: 1,
+                    areaColor: '#1e293b'
                 },
-                visualMap: {
-                    show: true, left: 'left', bottom: '5%',
-                    min: 0, max: data.maxCount || 100,
-                    text: ['高', '低'],
-                    textStyle: { color: '#94a3b8' },
-                    inRange: { color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff'] }
-                },
-                series: [{
-                    type: 'map',
-                    map: 'world',
-                    roam: true,
-                    zoom: 1.2,
-                    center: [10, 10],
+                emphasis: {
                     itemStyle: {
-                        borderColor: '#334155', borderWidth: 1,
-                        areaColor: '#1e293b'
+                        areaColor: '#00d4ff',
+                        borderColor: '#00d4ff',
+                        borderWidth: 2
                     },
-                    emphasis: {
-                        itemStyle: {
-                            areaColor: '#00d4ff',
-                            borderColor: '#00d4ff',
-                            borderWidth: 2
-                        },
-                        label: { show: true, color: '#fff' }
-                    },
-                    data: data.countries
-                }]
-            };
+                    label: { show: true, color: '#fff' }
+                },
+                data: mapData.countries
+            }]
+        };
 
-            // 使用内置世界地图
-            mapChart.setOption(mapOptions);
-        }).catch(() => {
-            mapDom.innerHTML = '<div style="color:#94a3b8;text-align:center;padding-top:150px;font-size:14px;">暂无攻击源地理数据</div>';
-        });
-
-        // 使用 ECharts 内置世界地图
+        // 加载世界地图
         (function() {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/js/world.js';
             script.onload = function() {
-                if (mapChart.getOption() && mapChart.getOption().series) {
-                    mapChart.setOption({
-                        series: [{
-                            type: 'map',
-                            map: 'world'
-                        }]
-                    });
-                }
+                mapChart.setOption(mapOptions);
+            };
+            script.onerror = function() {
+                // 如果无法加载地图数据，显示简化的统计信息
+                mapDom.innerHTML = '<div style="color:#94a3b8;text-align:center;padding-top:150px;font-size:14px;">地图数据加载失败<br/>攻击来源国家统计:</div>';
             };
             document.head.appendChild(script);
         })();
@@ -598,6 +591,7 @@ def generate_html(df, stats, accounts, week_compare):
     # --- 变量准备 ---
     chart_data = generate_chart_data(df)
     heatmap_data = json.dumps(stats.get("heatmap_data", [0]*24))
+    map_data = generate_map_data(df)
     top_passwords = get_top_passwords(accounts)
     top_usernames = get_top_usernames(accounts)
 
@@ -607,6 +601,7 @@ def generate_html(df, stats, accounts, week_compare):
         stats=stats, 
         chart_data=chart_data,
         heatmap_data=heatmap_data,
+        map_data=map_data,
         top_passwords=top_passwords, 
         top_usernames=top_usernames,
         week_compare=week_compare,
