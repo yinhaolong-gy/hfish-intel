@@ -7,6 +7,8 @@
     <title>HFish 威胁情报监控中心</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -52,7 +54,7 @@
             display: flex; align-items: center; gap: 10px;
         }
         .chart-container { width: 100%; height: 380px; }
-        .map-container { width: 100%; height: 500px; }
+        .map-container { width: 100%; height: 500px; border-radius: 12px; }
         .heatmap-container { width: 100%; height: 300px; }
         .honeypot-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px;
@@ -106,7 +108,7 @@
         <!-- 头部 -->
         <div class="header">
             <h1>🛡️ HFish 威胁情报监控中心</h1>
-            <p class="subtitle">📊 监控周期: 2026-02-05 11:42 ~ 2026-05-06 11:42 | 最后更新: 2026-05-06 11:42:52</p>
+            <p class="subtitle">📊 监控周期: 2026-02-05 11:51 ~ 2026-05-06 11:51 | 最后更新: 2026-05-06 11:51:26</p>
         </div>
 
         <!-- 统计卡片 -->
@@ -120,7 +122,7 @@
                 <div class="stat-label">独立攻击IP</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">26647</div>
+                <div class="stat-number">26677</div>
                 <div class="stat-label">账号资产数据</div>
             </div>
             <div class="stat-card">
@@ -268,7 +270,7 @@
                 <div class="list-item">
                     <h3>🔑 弱口令字典 TOP 10</h3>
                     
-                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2591次</span></div>
+                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2605次</span></div>
                     <div class="rank-item"><span class="warning">123</span><span class="rank-value">169次</span></div>
                     <div class="rank-item"><span class="warning">111111</span><span class="rank-value">147次</span></div>
                     <div class="rank-item"><span class="warning">1</span><span class="rank-value">84次</span></div>
@@ -1006,7 +1008,7 @@
         </div>
 
         <div class="footer">
-            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-06 11:42:52</p>
+            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-06 11:51:26</p>
         </div>
     </div>
 
@@ -1070,144 +1072,408 @@
 
     <!-- 世界地图 -->
     <script>
-        // 加载真实的世界地图数据
-        fetch('country_data.json').then(res=>res.json()).then(data=>{
-            // 从 CDN 加载真实的世界地图 GeoJSON 数据
-            fetch('https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/json/world.json')
-            .then(mapRes=>mapRes.json())
-            .then(worldJson=>{
-                echarts.registerMap('world', worldJson);
-                
-                var mc = echarts.init(document.getElementById('worldMap'));
-                mc.setOption({
-                    backgroundColor: 'transparent',
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: function(params) {
-                            return params.name + ': ' + (params.value || 0) + ' 次攻击';
-                        }
-                    },
-                    visualMap: {
-                        show: true,
-                        left: 'right',
-                        bottom: '5%',
-                        min: 0,
-                        max: data.maxCount || 100,
-                        inRange: {
-                            color: ['#1a1a3e', '#0d47a1', '#1565c0', '#00d4ff', '#06b6d4']
-                        },
-                        text: ['高', '低'],
-                        textStyle: {
-                            color: '#94a3b8'
-                        },
-                        calculable: true
-                    },
-                    series: [{
-                        name: '攻击分布',
-                        type: 'map',
-                        map: 'world',
-                        roam: true,
-                        zoom: 1.5,
-                        center: [0, 20],
-                        label: {
-                            show: false,
-                            color: '#fff'
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                color: '#fff',
-                                fontSize: 12
-                            },
-                            itemStyle: {
-                                areaColor: '#00d4ff',
-                                shadowColor: 'rgba(0, 212, 255, 0.5)',
-                                shadowBlur: 10
-                            }
-                        },
-                        itemStyle: {
-                            borderColor: '#334155',
-                            borderWidth: 1,
-                            areaColor: '#1e293b'
-                        },
-                        data: data.countries
-                    }]
-                });
-                window.addEventListener('resize', () => mc.resize());
-            }).catch(err=>{
-                console.error('地图数据加载失败，使用备用方案:', err);
-                useSimpleMap(data);
+        fetch('country_data.json').then(res => res.json()).then(data => {
+            var map = L.map('worldMap', {
+                center: [30, 0],
+                zoom: 2,
+                zoomControl: true
             });
-        }).catch(err=>{
-            console.error('数据加载失败:', err);
-        });
-        
-        // 备用方案：使用简化但更真实的地图
-        function useSimpleMap(data) {
-            var simpleMapData = {
-                type: 'FeatureCollection',
-                features: [
-                    {"type":"Feature","properties":{"name":"China"},"geometry":{"type":"Polygon","coordinates":[[[73.5,18.2],[98.8,18.2],[108.9,20.3],[117.9,22.7],[126.6,23.6],[129.3,25.2],[135.1,29.5],[135.1,49.1],[130.8,52.9],[120.9,53.5],[111.2,53.0],[103.1,52.5],[94.1,51.7],[86.3,49.0],[80.0,45.5],[73.5,39.1],[73.5,18.2]]]}},
-                    {"type":"Feature","properties":{"name":"United States"},"geometry":{"type":"Polygon","coordinates":[[[-179.2,18.9],[-160.0,50.0],[-140.0,60.0],[-120.0,49.0],[-100.0,49.0],[-80.0,49.0],[-66.9,45.0],[-66.9,25.0],[-90.0,25.0],[-120.0,25.0],[-179.2,18.9]]]}},
-                    {"type":"Feature","properties":{"name":"Russia"},"geometry":{"type":"Polygon","coordinates":[[[20.1,41.2],[40.0,45.0],[60.0,50.0],[80.0,50.0],[100.0,50.0],[120.0,50.0],[140.0,50.0],[160.0,50.0],[179.9,50.0],[179.9,70.0],[150.0,70.0],[120.0,70.0],[90.0,70.0],[60.0,70.0],[30.0,60.0],[20.1,41.2]]]}},
-                    {"type":"Feature","properties":{"name":"Canada"},"geometry":{"type":"Polygon","coordinates":[[[-141.0,41.7],[-120.0,49.0],[-100.0,49.0],[-80.0,49.0],[-60.0,49.0],[-60.0,70.0],[-100.0,80.0],[-141.0,83.2],[-141.0,41.7]]]}},
-                    {"type":"Feature","properties":{"name":"Brazil"},"geometry":{"type":"Polygon","coordinates":[[[-74.0,-33.7],[-60.0,-30.0],[-40.0,-20.0],[-32.3,0.0],[-40.0,10.0],[-60.0,10.0],[-74.0,0.0],[-74.0,-33.7]]]}},
-                    {"type":"Feature","properties":{"name":"Australia"},"geometry":{"type":"Polygon","coordinates":[[[112.9,-43.7],[120.0,-40.0],[140.0,-35.0],[153.4,-30.0],[153.4,-10.4],[140.0,-20.0],[120.0,-25.0],[112.9,-43.7]]]}},
-                    {"type":"Feature","properties":{"name":"India"},"geometry":{"type":"Polygon","coordinates":[[[68.2,6.7],[75.0,10.0],[85.0,15.0],[97.4,20.0],[97.4,30.0],[80.0,35.0],[68.2,30.0],[68.2,6.7]]]}},
-                    {"type":"Feature","properties":{"name":"Japan"},"geometry":{"type":"Polygon","coordinates":[[[129.9,30.3],[135.0,35.0],[140.0,40.0],[145.8,45.5],[140.0,40.0],[135.0,35.0],[129.9,30.3]]]}},
-                    {"type":"Feature","properties":{"name":"Germany"},"geometry":{"type":"Polygon","coordinates":[[[5.8,47.3],[10.0,48.0],[15.2,50.0],[12.0,55.0],[7.0,55.0],[5.8,47.3]]]}},
-                    {"type":"Feature","properties":{"name":"United Kingdom"},"geometry":{"type":"Polygon","coordinates":[[[-8.4,50.7],[-2.0,51.0],[1.7,53.0],[-2.0,58.0],[-6.0,58.0],[-8.4,50.7]]]}},
-                    {"type":"Feature","properties":{"name":"France"},"geometry":{"type":"Polygon","coordinates":[[[-5.1,41.2],[2.0,43.0],[7.0,45.0],[9.5,50.0],[5.0,50.0],[-5.1,41.2]]]}},
-                    {"type":"Feature","properties":{"name":"Italy"},"geometry":{"type":"Polygon","coordinates":[[[6.6,35.4],[12.0,38.0],[18.5,42.0],[15.0,47.0],[8.0,45.0],[6.6,35.4]]]}},
-                    {"type":"Feature","properties":{"name":"South Korea"},"geometry":{"type":"Polygon","coordinates":[[[124.7,33.1],[128.0,35.0],[131.1,38.0],[128.0,38.5],[124.7,38.0],[124.7,33.1]]]}},
-                    {"type":"Feature","properties":{"name":"Singapore"},"geometry":{"type":"Polygon","coordinates":[[[103.6,1.1],[104.0,1.1],[104.0,1.5],[103.6,1.5],[103.6,1.1]]]}},
-                    {"type":"Feature","properties":{"name":"Malaysia"},"geometry":{"type":"Polygon","coordinates":[[[100.0,1.0],[115.0,1.0],[119.2,5.0],[105.0,7.0],[100.0,5.0],[100.0,1.0]]]}},
-                    {"type":"Feature","properties":{"name":"Indonesia"},"geometry":{"type":"Polygon","coordinates":[[[95.0,-10.0],[110.0,-8.0],[130.0,-6.0],[141.0,-5.0],[130.0,0.0],[110.0,2.0],[95.0,-5.0],[95.0,-10.0]]]}},
-                    {"type":"Feature","properties":{"name":"Thailand"},"geometry":{"type":"Polygon","coordinates":[[[98.0,5.5],[102.0,7.0],[105.6,10.0],[102.0,18.0],[98.0,15.0],[98.0,5.5]]]}},
-                    {"type":"Feature","properties":{"name":"Vietnam"},"geometry":{"type":"Polygon","coordinates":[[[102.1,8.4],[106.0,10.0],[109.5,12.0],[106.0,22.0],[102.1,20.0],[102.1,8.4]]]}},
-                    {"type":"Feature","properties":{"name":"Turkey"},"geometry":{"type":"Polygon","coordinates":[[[25.6,35.6],[30.0,37.0],[40.0,38.0],[44.8,40.0],[40.0,42.0],[30.0,41.0],[25.6,38.0],[25.6,35.6]]]}},
-                    {"type":"Feature","properties":{"name":"Iran"},"geometry":{"type":"Polygon","coordinates":[[[44.0,25.0],[50.0,27.0],[60.0,29.0],[63.3,32.0],[55.0,38.0],[45.0,35.0],[44.0,25.0]]]}},
-                    {"type":"Feature","properties":{"name":"Netherlands"},"geometry":{"type":"Polygon","coordinates":[[[3.3,50.7],[5.0,51.0],[7.2,52.0],[5.0,53.5],[3.3,52.0],[3.3,50.7]]]}},
-                    {"type":"Feature","properties":{"name":"Sweden"},"geometry":{"type":"Polygon","coordinates":[[[11.1,55.3],[15.0,56.0],[20.0,60.0],[24.1,65.0],[18.0,69.0],[12.0,65.0],[11.1,55.3]]]}},
-                    {"type":"Feature","properties":{"name":"Switzerland"},"geometry":{"type":"Polygon","coordinates":[[[5.9,45.8],[8.0,46.0],[10.5,47.0],[8.0,47.9],[5.9,47.0],[5.9,45.8]]]}},
-                    {"type":"Feature","properties":{"name":"Spain"},"geometry":{"type":"Polygon","coordinates":[[[-9.4,35.9],[-5.0,36.0],[0.0,37.0],[-0.5,42.0],[-5.0,43.7],[-9.4,40.0],[-9.4,35.9]]]}},
-                    {"type":"Feature","properties":{"name":"Ukraine"},"geometry":{"type":"Polygon","coordinates":[[[22.1,44.3],[30.0,45.0],[41.0,46.0],[38.0,52.0],[30.0,50.0],[22.1,48.0],[22.1,44.3]]]}},
-                    {"type":"Feature","properties":{"name":"Poland"},"geometry":{"type":"Polygon","coordinates":[[[14.1,49.0],[18.0,50.0],[24.1,51.0],[20.0,55.6],[16.0,54.0],[14.1,51.0],[14.1,49.0]]]}}
-                ]
-            };
-            echarts.registerMap('world', simpleMapData);
             
-            var mc = echarts.init(document.getElementById('worldMap'));
-            mc.setOption({
-                tooltip: {trigger: 'item', formatter: p => p.name + ': ' + (p.value || 0) + ' 次攻击'},
-                visualMap: {
-                    show: true,
-                    left: 'right',
-                    bottom: '10%',
-                    min: 0,
-                    max: data.maxCount || 100,
-                    inRange: {color: ['#1a1a3e', '#0d47a1', '#1565c0', '#00d4ff', '#06b6d4']},
-                    textStyle: {color: '#94a3b8'}
-                },
-                series: [{
-                    type: 'map',
-                    map: 'world',
-                    roam: true,
-                    zoom: 1.5,
-                    center: [0, 20],
-                    emphasis: {
-                        label: {show: true, color: '#fff'},
-                        itemStyle: {areaColor: '#00d4ff'}
-                    },
-                    itemStyle: {
-                        borderColor: '#333',
-                        areaColor: '#1e293b'
-                    },
-                    data: data.countries
-                }]
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+            
+            var countryCoords = {
+                "China": [35.8617, 104.1954],
+                "United States": [37.0902, -95.7129],
+                "Russia": [61.5240, 105.3188],
+                "Canada": [56.1304, -106.3468],
+                "Brazil": [-14.2350, -51.9253],
+                "Australia": [-25.2744, 133.7751],
+                "India": [20.5937, 78.9629],
+                "Japan": [36.2048, 138.2529],
+                "Germany": [51.1657, 10.4515],
+                "United Kingdom": [55.3781, -3.4360],
+                "France": [46.2276, 2.2137],
+                "Italy": [41.8719, 12.5674],
+                "South Korea": [35.9078, 127.7669],
+                "Singapore": [1.3521, 103.8198],
+                "Malaysia": [2.5276, 112.9388],
+                "Indonesia": [-0.7893, 113.9213],
+                "Thailand": [15.8700, 100.9925],
+                "Vietnam": [14.0583, 108.2772],
+                "Turkey": [38.9637, 35.2433],
+                "Iran": [32.4279, 53.6880],
+                "Netherlands": [52.1326, 5.2913],
+                "Sweden": [60.1282, 18.6435],
+                "Switzerland": [46.8182, 8.2275],
+                "Spain": [40.4637, -3.7492],
+                "Ukraine": [48.3794, 31.1656],
+                "Poland": [51.9194, 19.1451],
+                "France": [46.2276, 2.2137],
+                "Mexico": [23.6345, -102.5528],
+                "Nigeria": [9.0820, 8.6753],
+                "Egypt": [26.8206, 30.8025],
+                "South Africa": [-30.5595, 22.9375],
+                "Argentina": [-38.4161, -63.6167],
+                "Chile": [-35.6751, -71.5430],
+                "Saudi Arabia": [23.8859, 45.0792],
+                "United Arab Emirates": [23.4241, 53.8478],
+                "Israel": [31.0461, 34.8516],
+                "Pakistan": [30.3753, 69.3451],
+                "Bangladesh": [23.6850, 90.3563],
+                "Philippines": [12.8797, 121.7740],
+                "New Zealand": [-40.9006, 174.8860],
+                "Norway": [60.4720, 8.4689],
+                "Denmark": [56.2639, 9.5018],
+                "Finland": [61.9241, 25.7482],
+                "Ireland": [53.4129, -8.2439],
+                "Portugal": [39.3999, -8.2245],
+                "Greece": [39.0742, 21.8243],
+                "Austria": [47.5162, 14.5501],
+                "Hungary": [47.1625, 19.5033],
+                "Czech Republic": [49.8175, 15.4729],
+                "Belgium": [50.5039, 4.4699],
+                "Luxembourg": [49.8153, 6.1296],
+                "Croatia": [45.1, 15.2],
+                "Serbia": [44.0165, 21.0059],
+                "Romania": [45.9432, 24.9668],
+                "Bulgaria": [42.7339, 25.4858],
+                "Hungary": [47.1625, 19.5033],
+                "Slovakia": [48.6690, 19.6990],
+                "Slovenia": [46.1512, 14.9955],
+                "Bosnia and Herzegovina": [43.8666, 18.4131],
+                "Montenegro": [42.7087, 19.3744],
+                "Albania": [41.1533, 20.1683],
+                "Macedonia": [41.6086, 21.7453],
+                "Kosovo": [42.6026, 20.9029],
+                "Cyprus": [35.1264, 33.4299],
+                "Malta": [35.9375, 14.3754],
+                "Iceland": [64.9631, -19.0208],
+                "Greenland": [71.7069, -42.6043],
+                "Fiji": [-16.5781, 179.4144],
+                "Papua New Guinea": [-6.3149, 143.9555],
+                "Solomon Islands": [-9.6457, 160.1562],
+                "Vanuatu": [-15.3767, 166.9592],
+                "New Caledonia": [-21.5218, 165.6786],
+                "French Polynesia": [-17.6797, -149.4068],
+                "Samoa": [-13.7590, -172.1046],
+                "Tonga": [-21.1789, -175.1982],
+                "Cook Islands": [-21.2367, -159.7777],
+                "Niue": [-19.0333, -169.8667],
+                "Norfolk Island": [-29.0408, 167.9547],
+                "Christmas Island": [-10.4475, 105.6904],
+                "Cocos Islands": [-12.1641, 96.8652],
+                "American Samoa": [-14.2710, -170.1322],
+                "Guam": [13.4443, 144.7937],
+                "Northern Mariana Islands": [15.2000, 145.7500],
+                "Palau": [7.5149, 134.5825],
+                "Micronesia": [7.4256, 150.5508],
+                "Marshall Islands": [7.1317, 167.4846],
+                "Nauru": [-0.5228, 166.9315],
+                "Kiribati": [1.8741, -157.4120],
+                "Tuvalu": [-7.1095, 178.6445],
+                "Wallis and Futuna": [-13.7687, -177.1561],
+                "Western Sahara": [24.2155, -12.8858],
+                "Morocco": [31.7917, -7.0926],
+                "Algeria": [28.0339, 1.6596],
+                "Tunisia": [33.8869, 9.5375],
+                "Libya": [26.3351, 17.2283],
+                "Sudan": [12.8628, 30.2176],
+                "Chad": [15.4542, 18.7322],
+                "Niger": [17.6078, 8.0817],
+                "Mali": [17.5707, -3.9962],
+                "Mauritania": [20.9373, -10.9408],
+                "Senegal": [14.4974, -14.4524],
+                "Gambia": [13.4432, -15.3101],
+                "Guinea-Bissau": [11.8037, -15.1804],
+                "Guinea": [10.9409, -9.6966],
+                "Sierra Leone": [8.4606, -11.7799],
+                "Liberia": [6.4281, -9.4295],
+                "Cote d'Ivoire": [7.5399, -5.5471],
+                "Ghana": [7.9465, -1.0232],
+                "Togo": [8.6195, 0.8248],
+                "Benin": [9.3077, 2.3158],
+                "Burkina Faso": [12.2383, -1.5616],
+                "Nigeria": [9.0820, 8.6753],
+                "Cameroon": [3.8480, 11.5021],
+                "Equatorial Guinea": [1.6508, 10.2679],
+                "Sao Tome and Principe": [0.1864, 6.6131],
+                "Gabon": [-0.8037, 11.6094],
+                "Republic of the Congo": [-1.4492, 15.8271],
+                "Democratic Republic of the Congo": [-4.0383, 21.7587],
+                "Central African Republic": [6.6111, 20.9394],
+                "Chad": [15.4542, 18.7322],
+                "Sudan": [12.8628, 30.2176],
+                "South Sudan": [6.8770, 31.3070],
+                "Ethiopia": [9.1450, 40.4897],
+                "Eritrea": [15.1794, 39.7823],
+                "Djibouti": [11.8251, 42.5903],
+                "Somalia": [5.1521, 46.1996],
+                "Kenya": [-0.0236, 37.9062],
+                "Uganda": [1.3733, 32.2903],
+                "Tanzania": [-6.3690, 34.8888],
+                "Rwanda": [-1.9403, 29.8739],
+                "Burundi": [-3.3731, 29.9189],
+                "Malawi": [-13.2543, 34.3015],
+                "Zambia": [-13.1339, 27.8493],
+                "Mozambique": [-18.6657, 35.5296],
+                "Zimbabwe": [-19.0154, 29.1549],
+                "Botswana": [-22.3285, 24.6849],
+                "Namibia": [-22.9576, 18.4904],
+                "South Africa": [-30.5595, 22.9375],
+                "Lesotho": [-29.6099, 28.2336],
+                "Swaziland": [-26.5225, 31.4659],
+                "Angola": [-11.2027, 17.8739],
+                "Madagascar": [-18.7669, 46.8691],
+                "Comoros": [-11.6455, 43.3333],
+                "Seychelles": [-4.6796, 55.4794],
+                "Mauritius": [-20.3484, 57.5522],
+                "Maldives": [3.2028, 73.2207],
+                "Sri Lanka": [7.8731, 80.7718],
+                "Bhutan": [27.5142, 90.4336],
+                "Nepal": [28.3949, 84.1240],
+                "Afghanistan": [33.9399, 67.7099],
+                "Kazakhstan": [48.0196, 66.9237],
+                "Uzbekistan": [41.3775, 64.5853],
+                "Turkmenistan": [38.9697, 59.5563],
+                "Kyrgyzstan": [41.2044, 74.7661],
+                "Tajikistan": [38.8610, 71.2761],
+                "Armenia": [40.0691, 45.0360],
+                "Azerbaijan": [40.1431, 47.5769],
+                "Georgia": [42.3154, 43.3569],
+                "Mongolia": [46.8625, 103.8467],
+                "North Korea": [40.3399, 127.5101],
+                "South Korea": [35.9078, 127.7669],
+                "Taiwan": [23.6978, 120.9605],
+                "Hong Kong": [22.3193, 114.1694],
+                "Macau": [22.1987, 113.5439],
+                "Philippines": [12.8797, 121.7740],
+                "Malaysia": [2.5276, 112.9388],
+                "Brunei": [4.5353, 114.7277],
+                "Cambodia": [12.5657, 104.9915],
+                "Laos": [19.8563, 102.4955],
+                "Myanmar": [21.9139, 95.9560],
+                "Bangladesh": [23.6850, 90.3563],
+                "Nepal": [28.3949, 84.1240],
+                "Bhutan": [27.5142, 90.4336],
+                "Sri Lanka": [7.8731, 80.7718],
+                "Maldives": [3.2028, 73.2207],
+                "Pakistan": [30.3753, 69.3451],
+                "India": [20.5937, 78.9629],
+                "Sri Lanka": [7.8731, 80.7718],
+                "Bangladesh": [23.6850, 90.3563],
+                "Nepal": [28.3949, 84.1240],
+                "Bhutan": [27.5142, 90.4336],
+                "Afghanistan": [33.9399, 67.7099],
+                "Iran": [32.4279, 53.6880],
+                "Iraq": [33.2232, 43.6793],
+                "Syria": [34.8021, 38.9968],
+                "Lebanon": [33.8547, 35.8623],
+                "Israel": [31.0461, 34.8516],
+                "Palestine": [31.9522, 35.2332],
+                "Jordan": [30.5852, 36.2384],
+                "Saudi Arabia": [23.8859, 45.0792],
+                "Yemen": [15.5527, 48.5164],
+                "Oman": [21.5126, 55.9233],
+                "United Arab Emirates": [23.4241, 53.8478],
+                "Qatar": [25.3548, 51.1839],
+                "Bahrain": [26.0275, 50.5518],
+                "Kuwait": [29.3117, 47.4818],
+                "Turkey": [38.9637, 35.2433],
+                "Cyprus": [35.1264, 33.4299],
+                "Armenia": [40.0691, 45.0360],
+                "Azerbaijan": [40.1431, 47.5769],
+                "Georgia": [42.3154, 43.3569],
+                "Russia": [61.5240, 105.3188],
+                "Ukraine": [48.3794, 31.1656],
+                "Belarus": [53.7098, 27.9534],
+                "Moldova": [47.4116, 28.3699],
+                "Estonia": [58.5953, 25.0136],
+                "Latvia": [56.8796, 24.6032],
+                "Lithuania": [55.1694, 23.8813],
+                "Poland": [51.9194, 19.1451],
+                "Czech Republic": [49.8175, 15.4729],
+                "Slovakia": [48.6690, 19.6990],
+                "Hungary": [47.1625, 19.5033],
+                "Austria": [47.5162, 14.5501],
+                "Germany": [51.1657, 10.4515],
+                "Switzerland": [46.8182, 8.2275],
+                "Liechtenstein": [47.1410, 9.5215],
+                "France": [46.2276, 2.2137],
+                "Monaco": [43.7384, 7.4246],
+                "Italy": [41.8719, 12.5674],
+                "San Marino": [43.9424, 12.4578],
+                "Vatican City": [41.9029, 12.4534],
+                "Malta": [35.9375, 14.3754],
+                "Greece": [39.0742, 21.8243],
+                "Bulgaria": [42.7339, 25.4858],
+                "Romania": [45.9432, 24.9668],
+                "Serbia": [44.0165, 21.0059],
+                "Kosovo": [42.6026, 20.9029],
+                "Montenegro": [42.7087, 19.3744],
+                "Bosnia and Herzegovina": [43.8666, 18.4131],
+                "Croatia": [45.1, 15.2],
+                "Slovenia": [46.1512, 14.9955],
+                "Albania": [41.1533, 20.1683],
+                "Macedonia": [41.6086, 21.7453],
+                "Ireland": [53.4129, -8.2439],
+                "United Kingdom": [55.3781, -3.4360],
+                "Isle of Man": [54.2361, -4.5481],
+                "Guernsey": [49.4653, -2.5852],
+                "Jersey": [49.2144, -2.1312],
+                "Iceland": [64.9631, -19.0208],
+                "Norway": [60.1282, 18.6435],
+                "Sweden": [60.1282, 18.6435],
+                "Denmark": [56.2639, 9.5018],
+                "Finland": [61.9241, 25.7482],
+                "Estonia": [58.5953, 25.0136],
+                "Latvia": [56.8796, 24.6032],
+                "Lithuania": [55.1694, 23.8813],
+                "Belarus": [53.7098, 27.9534],
+                "Ukraine": [48.3794, 31.1656],
+                "Moldova": [47.4116, 28.3699],
+                "Russia": [61.5240, 105.3188],
+                "Kazakhstan": [48.0196, 66.9237],
+                "China": [35.8617, 104.1954],
+                "Mongolia": [46.8625, 103.8467],
+                "Japan": [36.2048, 138.2529],
+                "North Korea": [40.3399, 127.5101],
+                "South Korea": [35.9078, 127.7669],
+                "Taiwan": [23.6978, 120.9605],
+                "Hong Kong": [22.3193, 114.1694],
+                "Macau": [22.1987, 113.5439],
+                "Philippines": [12.8797, 121.7740],
+                "Malaysia": [2.5276, 112.9388],
+                "Brunei": [4.5353, 114.7277],
+                "Singapore": [1.3521, 103.8198],
+                "Indonesia": [-0.7893, 113.9213],
+                "Timor-Leste": [-8.8742, 125.7275],
+                "Australia": [-25.2744, 133.7751],
+                "New Zealand": [-40.9006, 174.8860],
+                "Papua New Guinea": [-6.3149, 143.9555],
+                "Solomon Islands": [-9.6457, 160.1562],
+                "Vanuatu": [-15.3767, 166.9592],
+                "New Caledonia": [-21.5218, 165.6786],
+                "Fiji": [-16.5781, 179.4144],
+                "Samoa": [-13.7590, -172.1046],
+                "Tonga": [-21.1789, -175.1982],
+                "Cook Islands": [-21.2367, -159.7777],
+                "Niue": [-19.0333, -169.8667],
+                "French Polynesia": [-17.6797, -149.4068],
+                "Wallis and Futuna": [-13.7687, -177.1561],
+                "American Samoa": [-14.2710, -170.1322],
+                "Palau": [7.5149, 134.5825],
+                "Micronesia": [7.4256, 150.5508],
+                "Marshall Islands": [7.1317, 167.4846],
+                "Nauru": [-0.5228, 166.9315],
+                "Kiribati": [1.8741, -157.4120],
+                "Tuvalu": [-7.1095, 178.6445],
+                "Norfolk Island": [-29.0408, 167.9547],
+                "Christmas Island": [-10.4475, 105.6904],
+                "Cocos Islands": [-12.1641, 96.8652],
+                "Guam": [13.4443, 144.7937],
+                "Northern Mariana Islands": [15.2000, 145.7500],
+                "United States": [37.0902, -95.7129],
+                "Canada": [56.1304, -106.3468],
+                "Greenland": [71.7069, -42.6043],
+                "Mexico": [23.6345, -102.5528],
+                "Guatemala": [15.7835, -90.2308],
+                "Belize": [17.1899, -88.4976],
+                "Honduras": [15.1999, -86.2419],
+                "El Salvador": [13.8333, -88.9167],
+                "Nicaragua": [12.8654, -85.2072],
+                "Costa Rica": [9.7489, -83.7534],
+                "Panama": [8.5380, -80.2217],
+                "Caribbean Sea": [15.0, -75.0],
+                "Bahamas": [25.0343, -77.3963],
+                "Cuba": [21.5218, -77.7812],
+                "Jamaica": [18.1096, -77.2975],
+                "Haiti": [18.9712, -72.2852],
+                "Dominican Republic": [18.7357, -70.1627],
+                "Puerto Rico": [18.2208, -66.5901],
+                "Virgin Islands": [18.3358, -64.8963],
+                "Guadeloupe": [16.2650, -61.5510],
+                "Martinique": [14.6415, -61.0242],
+                "Trinidad and Tobago": [10.6918, -61.2225],
+                "Barbados": [13.1939, -59.5432],
+                "Grenada": [12.1165, -61.6790],
+                "Saint Lucia": [13.9094, -60.9789],
+                "Saint Vincent and the Grenadines": [13.2500, -61.2500],
+                "Antigua and Barbuda": [17.0608, -61.7964],
+                "Dominica": [15.4140, -61.3710],
+                "Saint Kitts and Nevis": [17.3578, -62.7829],
+                "Anguilla": [18.2236, -63.0649],
+                "Montserrat": [16.7425, -62.1873],
+                "Turks and Caicos Islands": [21.7500, -71.5833],
+                "Cayman Islands": [19.5135, -80.5669],
+                "Aruba": [12.5211, -69.9683],
+                "Bonaire": [12.1167, -68.2667],
+                "Sint Eustatius": [17.4167, -62.9333],
+                "Saba": [17.6333, -63.2167],
+                "Curacao": [12.1696, -68.9093],
+                "Colombia": [4.5709, -74.2973],
+                "Venezuela": [6.4238, -66.5897],
+                "Guyana": [4.8604, -58.9302],
+                "Suriname": [3.9193, -56.0278],
+                "French Guiana": [4.9333, -52.3333],
+                "Brazil": [-14.2350, -51.9253],
+                "Peru": [-9.1899, -75.0152],
+                "Bolivia": [-16.2901, -63.5887],
+                "Chile": [-35.6751, -71.5430],
+                "Argentina": [-38.4161, -63.6167],
+                "Paraguay": [-23.4425, -58.4438],
+                "Uruguay": [-32.5228, -55.7658],
+                "Ecuador": [-1.8312, -78.1834],
+                "Galapagos": [-0.9492, -91.0993],
+                "Falkland Islands": [-51.7963, -59.5236],
+                "South Georgia and the South Sandwich Islands": [-54.5, -37.0],
+                "Antarctica": [-90.0, 0.0]
+            };
+            
+            var maxCount = data.maxCount || 100;
+            
+            data.countries.forEach(function(country) {
+                var coords = countryCoords[country.name];
+                if (coords) {
+                    var intensity = Math.min(country.value / maxCount, 1);
+                    var radius = 5 + (intensity * 15);
+                    var opacity = 0.3 + (intensity * 0.7);
+                    
+                    L.circleMarker(coords, {
+                        radius: radius,
+                        fillColor: '#00d4ff',
+                        color: '#00d4ff',
+                        weight: 2,
+                        opacity: opacity,
+                        fillOpacity: opacity * 0.6
+                    }).addTo(map).bindPopup('<b>' + country.name + '</b><br/>攻击次数: ' + country.value);
+                }
             });
-            window.addEventListener('resize', () => mc.resize());
-        }
+            
+            var legend = L.control({position: 'bottomright'});
+            legend.onAdd = function(map) {
+                var div = L.DomUtil.create('div', 'legend');
+                div.innerHTML = '<h4>攻击强度</h4>';
+                var grades = [0, 20, 50, 100];
+                var labels = [];
+                for (var i = 0; i < grades.length; i++) {
+                    div.innerHTML +=
+                        '<i style="background:rgba(0,212,255,' + (0.3 + (grades[i]/100)*0.7) + ');width:' + (5 + (grades[i]/100)*15) + 'px;height:' + (5 + (grades[i]/100)*15) + 'px;border-radius:50%;display:inline-block;margin-right:5px;"></i> ' +
+                        grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+') + '<br>';
+                }
+                return div;
+            };
+            legend.addTo(map);
+            
+            window.addEventListener('resize', function() {
+                map.invalidateSize();
+            });
+        }).catch(err => {
+            console.error('地图数据加载失败:', err);
+        });
     </script>
 </body>
 </html>
