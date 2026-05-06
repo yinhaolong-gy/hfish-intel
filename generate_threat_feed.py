@@ -197,8 +197,6 @@ def generate_html(df, stats, accounts, week_compare):
     <title>HFish 威胁情报监控中心</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -244,7 +242,7 @@ def generate_html(df, stats, accounts, week_compare):
             display: flex; align-items: center; gap: 10px;
         }
         .chart-container { width: 100%; height: 380px; }
-        .map-container { width: 100%; height: 500px; border-radius: 12px; }
+        .map-container { width: 100%; height: 500px; border-radius: 12px; position: relative; overflow: hidden; background: #0f172a; }
         .heatmap-container { width: 100%; height: 300px; }
         .honeypot-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px;
@@ -494,406 +492,139 @@ def generate_html(df, stats, accounts, week_compare):
     <!-- 世界地图 -->
     <script>
         fetch('country_data.json').then(res => res.json()).then(data => {
-            var map = L.map('worldMap', {
-                center: [30, 0],
-                zoom: 2,
-                zoomControl: true
-            });
-            
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-            
-            var countryCoords = {
-                "China": [35.8617, 104.1954],
-                "United States": [37.0902, -95.7129],
-                "Russia": [61.5240, 105.3188],
-                "Canada": [56.1304, -106.3468],
-                "Brazil": [-14.2350, -51.9253],
-                "Australia": [-25.2744, 133.7751],
-                "India": [20.5937, 78.9629],
-                "Japan": [36.2048, 138.2529],
-                "Germany": [51.1657, 10.4515],
-                "United Kingdom": [55.3781, -3.4360],
-                "France": [46.2276, 2.2137],
-                "Italy": [41.8719, 12.5674],
-                "South Korea": [35.9078, 127.7669],
-                "Singapore": [1.3521, 103.8198],
-                "Malaysia": [2.5276, 112.9388],
-                "Indonesia": [-0.7893, 113.9213],
-                "Thailand": [15.8700, 100.9925],
-                "Vietnam": [14.0583, 108.2772],
-                "Turkey": [38.9637, 35.2433],
-                "Iran": [32.4279, 53.6880],
-                "Netherlands": [52.1326, 5.2913],
-                "Sweden": [60.1282, 18.6435],
-                "Switzerland": [46.8182, 8.2275],
-                "Spain": [40.4637, -3.7492],
-                "Ukraine": [48.3794, 31.1656],
-                "Poland": [51.9194, 19.1451],
-                "France": [46.2276, 2.2137],
-                "Mexico": [23.6345, -102.5528],
-                "Nigeria": [9.0820, 8.6753],
-                "Egypt": [26.8206, 30.8025],
-                "South Africa": [-30.5595, 22.9375],
-                "Argentina": [-38.4161, -63.6167],
-                "Chile": [-35.6751, -71.5430],
-                "Saudi Arabia": [23.8859, 45.0792],
-                "United Arab Emirates": [23.4241, 53.8478],
-                "Israel": [31.0461, 34.8516],
-                "Pakistan": [30.3753, 69.3451],
-                "Bangladesh": [23.6850, 90.3563],
-                "Philippines": [12.8797, 121.7740],
-                "New Zealand": [-40.9006, 174.8860],
-                "Norway": [60.4720, 8.4689],
-                "Denmark": [56.2639, 9.5018],
-                "Finland": [61.9241, 25.7482],
-                "Ireland": [53.4129, -8.2439],
-                "Portugal": [39.3999, -8.2245],
-                "Greece": [39.0742, 21.8243],
-                "Austria": [47.5162, 14.5501],
-                "Hungary": [47.1625, 19.5033],
-                "Czech Republic": [49.8175, 15.4729],
-                "Belgium": [50.5039, 4.4699],
-                "Luxembourg": [49.8153, 6.1296],
-                "Croatia": [45.1, 15.2],
-                "Serbia": [44.0165, 21.0059],
-                "Romania": [45.9432, 24.9668],
-                "Bulgaria": [42.7339, 25.4858],
-                "Hungary": [47.1625, 19.5033],
-                "Slovakia": [48.6690, 19.6990],
-                "Slovenia": [46.1512, 14.9955],
-                "Bosnia and Herzegovina": [43.8666, 18.4131],
-                "Montenegro": [42.7087, 19.3744],
-                "Albania": [41.1533, 20.1683],
-                "Macedonia": [41.6086, 21.7453],
-                "Kosovo": [42.6026, 20.9029],
-                "Cyprus": [35.1264, 33.4299],
-                "Malta": [35.9375, 14.3754],
-                "Iceland": [64.9631, -19.0208],
-                "Greenland": [71.7069, -42.6043],
-                "Fiji": [-16.5781, 179.4144],
-                "Papua New Guinea": [-6.3149, 143.9555],
-                "Solomon Islands": [-9.6457, 160.1562],
-                "Vanuatu": [-15.3767, 166.9592],
-                "New Caledonia": [-21.5218, 165.6786],
-                "French Polynesia": [-17.6797, -149.4068],
-                "Samoa": [-13.7590, -172.1046],
-                "Tonga": [-21.1789, -175.1982],
-                "Cook Islands": [-21.2367, -159.7777],
-                "Niue": [-19.0333, -169.8667],
-                "Norfolk Island": [-29.0408, 167.9547],
-                "Christmas Island": [-10.4475, 105.6904],
-                "Cocos Islands": [-12.1641, 96.8652],
-                "American Samoa": [-14.2710, -170.1322],
-                "Guam": [13.4443, 144.7937],
-                "Northern Mariana Islands": [15.2000, 145.7500],
-                "Palau": [7.5149, 134.5825],
-                "Micronesia": [7.4256, 150.5508],
-                "Marshall Islands": [7.1317, 167.4846],
-                "Nauru": [-0.5228, 166.9315],
-                "Kiribati": [1.8741, -157.4120],
-                "Tuvalu": [-7.1095, 178.6445],
-                "Wallis and Futuna": [-13.7687, -177.1561],
-                "Western Sahara": [24.2155, -12.8858],
-                "Morocco": [31.7917, -7.0926],
-                "Algeria": [28.0339, 1.6596],
-                "Tunisia": [33.8869, 9.5375],
-                "Libya": [26.3351, 17.2283],
-                "Sudan": [12.8628, 30.2176],
-                "Chad": [15.4542, 18.7322],
-                "Niger": [17.6078, 8.0817],
-                "Mali": [17.5707, -3.9962],
-                "Mauritania": [20.9373, -10.9408],
-                "Senegal": [14.4974, -14.4524],
-                "Gambia": [13.4432, -15.3101],
-                "Guinea-Bissau": [11.8037, -15.1804],
-                "Guinea": [10.9409, -9.6966],
-                "Sierra Leone": [8.4606, -11.7799],
-                "Liberia": [6.4281, -9.4295],
-                "Cote d'Ivoire": [7.5399, -5.5471],
-                "Ghana": [7.9465, -1.0232],
-                "Togo": [8.6195, 0.8248],
-                "Benin": [9.3077, 2.3158],
-                "Burkina Faso": [12.2383, -1.5616],
-                "Nigeria": [9.0820, 8.6753],
-                "Cameroon": [3.8480, 11.5021],
-                "Equatorial Guinea": [1.6508, 10.2679],
-                "Sao Tome and Principe": [0.1864, 6.6131],
-                "Gabon": [-0.8037, 11.6094],
-                "Republic of the Congo": [-1.4492, 15.8271],
-                "Democratic Republic of the Congo": [-4.0383, 21.7587],
-                "Central African Republic": [6.6111, 20.9394],
-                "Chad": [15.4542, 18.7322],
-                "Sudan": [12.8628, 30.2176],
-                "South Sudan": [6.8770, 31.3070],
-                "Ethiopia": [9.1450, 40.4897],
-                "Eritrea": [15.1794, 39.7823],
-                "Djibouti": [11.8251, 42.5903],
-                "Somalia": [5.1521, 46.1996],
-                "Kenya": [-0.0236, 37.9062],
-                "Uganda": [1.3733, 32.2903],
-                "Tanzania": [-6.3690, 34.8888],
-                "Rwanda": [-1.9403, 29.8739],
-                "Burundi": [-3.3731, 29.9189],
-                "Malawi": [-13.2543, 34.3015],
-                "Zambia": [-13.1339, 27.8493],
-                "Mozambique": [-18.6657, 35.5296],
-                "Zimbabwe": [-19.0154, 29.1549],
-                "Botswana": [-22.3285, 24.6849],
-                "Namibia": [-22.9576, 18.4904],
-                "South Africa": [-30.5595, 22.9375],
-                "Lesotho": [-29.6099, 28.2336],
-                "Swaziland": [-26.5225, 31.4659],
-                "Angola": [-11.2027, 17.8739],
-                "Madagascar": [-18.7669, 46.8691],
-                "Comoros": [-11.6455, 43.3333],
-                "Seychelles": [-4.6796, 55.4794],
-                "Mauritius": [-20.3484, 57.5522],
-                "Maldives": [3.2028, 73.2207],
-                "Sri Lanka": [7.8731, 80.7718],
-                "Bhutan": [27.5142, 90.4336],
-                "Nepal": [28.3949, 84.1240],
-                "Afghanistan": [33.9399, 67.7099],
-                "Kazakhstan": [48.0196, 66.9237],
-                "Uzbekistan": [41.3775, 64.5853],
-                "Turkmenistan": [38.9697, 59.5563],
-                "Kyrgyzstan": [41.2044, 74.7661],
-                "Tajikistan": [38.8610, 71.2761],
-                "Armenia": [40.0691, 45.0360],
-                "Azerbaijan": [40.1431, 47.5769],
-                "Georgia": [42.3154, 43.3569],
-                "Mongolia": [46.8625, 103.8467],
-                "North Korea": [40.3399, 127.5101],
-                "South Korea": [35.9078, 127.7669],
-                "Taiwan": [23.6978, 120.9605],
-                "Hong Kong": [22.3193, 114.1694],
-                "Macau": [22.1987, 113.5439],
-                "Philippines": [12.8797, 121.7740],
-                "Malaysia": [2.5276, 112.9388],
-                "Brunei": [4.5353, 114.7277],
-                "Cambodia": [12.5657, 104.9915],
-                "Laos": [19.8563, 102.4955],
-                "Myanmar": [21.9139, 95.9560],
-                "Bangladesh": [23.6850, 90.3563],
-                "Nepal": [28.3949, 84.1240],
-                "Bhutan": [27.5142, 90.4336],
-                "Sri Lanka": [7.8731, 80.7718],
-                "Maldives": [3.2028, 73.2207],
-                "Pakistan": [30.3753, 69.3451],
-                "India": [20.5937, 78.9629],
-                "Sri Lanka": [7.8731, 80.7718],
-                "Bangladesh": [23.6850, 90.3563],
-                "Nepal": [28.3949, 84.1240],
-                "Bhutan": [27.5142, 90.4336],
-                "Afghanistan": [33.9399, 67.7099],
-                "Iran": [32.4279, 53.6880],
-                "Iraq": [33.2232, 43.6793],
-                "Syria": [34.8021, 38.9968],
-                "Lebanon": [33.8547, 35.8623],
-                "Israel": [31.0461, 34.8516],
-                "Palestine": [31.9522, 35.2332],
-                "Jordan": [30.5852, 36.2384],
-                "Saudi Arabia": [23.8859, 45.0792],
-                "Yemen": [15.5527, 48.5164],
-                "Oman": [21.5126, 55.9233],
-                "United Arab Emirates": [23.4241, 53.8478],
-                "Qatar": [25.3548, 51.1839],
-                "Bahrain": [26.0275, 50.5518],
-                "Kuwait": [29.3117, 47.4818],
-                "Turkey": [38.9637, 35.2433],
-                "Cyprus": [35.1264, 33.4299],
-                "Armenia": [40.0691, 45.0360],
-                "Azerbaijan": [40.1431, 47.5769],
-                "Georgia": [42.3154, 43.3569],
-                "Russia": [61.5240, 105.3188],
-                "Ukraine": [48.3794, 31.1656],
-                "Belarus": [53.7098, 27.9534],
-                "Moldova": [47.4116, 28.3699],
-                "Estonia": [58.5953, 25.0136],
-                "Latvia": [56.8796, 24.6032],
-                "Lithuania": [55.1694, 23.8813],
-                "Poland": [51.9194, 19.1451],
-                "Czech Republic": [49.8175, 15.4729],
-                "Slovakia": [48.6690, 19.6990],
-                "Hungary": [47.1625, 19.5033],
-                "Austria": [47.5162, 14.5501],
-                "Germany": [51.1657, 10.4515],
-                "Switzerland": [46.8182, 8.2275],
-                "Liechtenstein": [47.1410, 9.5215],
-                "France": [46.2276, 2.2137],
-                "Monaco": [43.7384, 7.4246],
-                "Italy": [41.8719, 12.5674],
-                "San Marino": [43.9424, 12.4578],
-                "Vatican City": [41.9029, 12.4534],
-                "Malta": [35.9375, 14.3754],
-                "Greece": [39.0742, 21.8243],
-                "Bulgaria": [42.7339, 25.4858],
-                "Romania": [45.9432, 24.9668],
-                "Serbia": [44.0165, 21.0059],
-                "Kosovo": [42.6026, 20.9029],
-                "Montenegro": [42.7087, 19.3744],
-                "Bosnia and Herzegovina": [43.8666, 18.4131],
-                "Croatia": [45.1, 15.2],
-                "Slovenia": [46.1512, 14.9955],
-                "Albania": [41.1533, 20.1683],
-                "Macedonia": [41.6086, 21.7453],
-                "Ireland": [53.4129, -8.2439],
-                "United Kingdom": [55.3781, -3.4360],
-                "Isle of Man": [54.2361, -4.5481],
-                "Guernsey": [49.4653, -2.5852],
-                "Jersey": [49.2144, -2.1312],
-                "Iceland": [64.9631, -19.0208],
-                "Norway": [60.1282, 18.6435],
-                "Sweden": [60.1282, 18.6435],
-                "Denmark": [56.2639, 9.5018],
-                "Finland": [61.9241, 25.7482],
-                "Estonia": [58.5953, 25.0136],
-                "Latvia": [56.8796, 24.6032],
-                "Lithuania": [55.1694, 23.8813],
-                "Belarus": [53.7098, 27.9534],
-                "Ukraine": [48.3794, 31.1656],
-                "Moldova": [47.4116, 28.3699],
-                "Russia": [61.5240, 105.3188],
-                "Kazakhstan": [48.0196, 66.9237],
-                "China": [35.8617, 104.1954],
-                "Mongolia": [46.8625, 103.8467],
-                "Japan": [36.2048, 138.2529],
-                "North Korea": [40.3399, 127.5101],
-                "South Korea": [35.9078, 127.7669],
-                "Taiwan": [23.6978, 120.9605],
-                "Hong Kong": [22.3193, 114.1694],
-                "Macau": [22.1987, 113.5439],
-                "Philippines": [12.8797, 121.7740],
-                "Malaysia": [2.5276, 112.9388],
-                "Brunei": [4.5353, 114.7277],
-                "Singapore": [1.3521, 103.8198],
-                "Indonesia": [-0.7893, 113.9213],
-                "Timor-Leste": [-8.8742, 125.7275],
-                "Australia": [-25.2744, 133.7751],
-                "New Zealand": [-40.9006, 174.8860],
-                "Papua New Guinea": [-6.3149, 143.9555],
-                "Solomon Islands": [-9.6457, 160.1562],
-                "Vanuatu": [-15.3767, 166.9592],
-                "New Caledonia": [-21.5218, 165.6786],
-                "Fiji": [-16.5781, 179.4144],
-                "Samoa": [-13.7590, -172.1046],
-                "Tonga": [-21.1789, -175.1982],
-                "Cook Islands": [-21.2367, -159.7777],
-                "Niue": [-19.0333, -169.8667],
-                "French Polynesia": [-17.6797, -149.4068],
-                "Wallis and Futuna": [-13.7687, -177.1561],
-                "American Samoa": [-14.2710, -170.1322],
-                "Palau": [7.5149, 134.5825],
-                "Micronesia": [7.4256, 150.5508],
-                "Marshall Islands": [7.1317, 167.4846],
-                "Nauru": [-0.5228, 166.9315],
-                "Kiribati": [1.8741, -157.4120],
-                "Tuvalu": [-7.1095, 178.6445],
-                "Norfolk Island": [-29.0408, 167.9547],
-                "Christmas Island": [-10.4475, 105.6904],
-                "Cocos Islands": [-12.1641, 96.8652],
-                "Guam": [13.4443, 144.7937],
-                "Northern Mariana Islands": [15.2000, 145.7500],
-                "United States": [37.0902, -95.7129],
-                "Canada": [56.1304, -106.3468],
-                "Greenland": [71.7069, -42.6043],
-                "Mexico": [23.6345, -102.5528],
-                "Guatemala": [15.7835, -90.2308],
-                "Belize": [17.1899, -88.4976],
-                "Honduras": [15.1999, -86.2419],
-                "El Salvador": [13.8333, -88.9167],
-                "Nicaragua": [12.8654, -85.2072],
-                "Costa Rica": [9.7489, -83.7534],
-                "Panama": [8.5380, -80.2217],
-                "Caribbean Sea": [15.0, -75.0],
-                "Bahamas": [25.0343, -77.3963],
-                "Cuba": [21.5218, -77.7812],
-                "Jamaica": [18.1096, -77.2975],
-                "Haiti": [18.9712, -72.2852],
-                "Dominican Republic": [18.7357, -70.1627],
-                "Puerto Rico": [18.2208, -66.5901],
-                "Virgin Islands": [18.3358, -64.8963],
-                "Guadeloupe": [16.2650, -61.5510],
-                "Martinique": [14.6415, -61.0242],
-                "Trinidad and Tobago": [10.6918, -61.2225],
-                "Barbados": [13.1939, -59.5432],
-                "Grenada": [12.1165, -61.6790],
-                "Saint Lucia": [13.9094, -60.9789],
-                "Saint Vincent and the Grenadines": [13.2500, -61.2500],
-                "Antigua and Barbuda": [17.0608, -61.7964],
-                "Dominica": [15.4140, -61.3710],
-                "Saint Kitts and Nevis": [17.3578, -62.7829],
-                "Anguilla": [18.2236, -63.0649],
-                "Montserrat": [16.7425, -62.1873],
-                "Turks and Caicos Islands": [21.7500, -71.5833],
-                "Cayman Islands": [19.5135, -80.5669],
-                "Aruba": [12.5211, -69.9683],
-                "Bonaire": [12.1167, -68.2667],
-                "Sint Eustatius": [17.4167, -62.9333],
-                "Saba": [17.6333, -63.2167],
-                "Curacao": [12.1696, -68.9093],
-                "Colombia": [4.5709, -74.2973],
-                "Venezuela": [6.4238, -66.5897],
-                "Guyana": [4.8604, -58.9302],
-                "Suriname": [3.9193, -56.0278],
-                "French Guiana": [4.9333, -52.3333],
-                "Brazil": [-14.2350, -51.9253],
-                "Peru": [-9.1899, -75.0152],
-                "Bolivia": [-16.2901, -63.5887],
-                "Chile": [-35.6751, -71.5430],
-                "Argentina": [-38.4161, -63.6167],
-                "Paraguay": [-23.4425, -58.4438],
-                "Uruguay": [-32.5228, -55.7658],
-                "Ecuador": [-1.8312, -78.1834],
-                "Galapagos": [-0.9492, -91.0993],
-                "Falkland Islands": [-51.7963, -59.5236],
-                "South Georgia and the South Sandwich Islands": [-54.5, -37.0],
-                "Antarctica": [-90.0, 0.0]
-            };
+            var container = document.getElementById('worldMap');
+            var mapHTML = `
+            <div style="width:100%;height:100%;background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);position:relative;">
+                <svg viewBox="0 0 800 400" style="width:100%;height:100%;">
+                    <defs>
+                        <filter id="glow2">
+                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    
+                    <g fill="#1e293b" stroke="#334155" stroke-width="0.8">
+                        <path d="M60,100 L100,80 L140,100 L130,140 L95,155 L65,145 Z"/>
+                        <path d="M160,115 L220,95 L260,120 L245,165 L205,180 L170,165 Z"/>
+                        <path d="M280,90 L380,75 L430,115 L410,185 L330,205 L285,170 Z"/>
+                        <path d="M480,65 L620,55 L670,100 L645,180 L530,200 L470,160 Z"/>
+                        <path d="M510,220 L590,205 L640,240 L610,295 L530,310 L495,275 Z"/>
+                        <path d="M680,100 L750,85 L785,125 L760,180 L705,195 L665,160 Z"/>
+                        <path d="M60,240 L110,225 L145,255 L125,300 L85,310 L65,275 Z"/>
+                        <path d="M180,215 L280,200 L330,240 L295,305 L220,320 L185,280 Z"/>
+                        <path d="M380,240 L460,225 L510,260 L480,315 L420,325 L385,285 Z"/>
+                        <path d="M580,220 L670,210 L710,250 L675,305 L610,315 L575,275 Z"/>
+                        <path d="M720,300 L780,290 L800,320 L780,360 L730,370 L710,335 Z"/>
+                    </g>
+                    
+                    <g fill="#00d4ff" filter="url(#glow2)">`;
             
             var maxCount = data.maxCount || 100;
+            var positions = {
+                "China": [550, 145], "United States": [200, 130], "Russia": [520, 100],
+                "Canada": [220, 80], "Brazil": [270, 270], "Australia": [730, 320],
+                "India": [590, 235], "Japan": [700, 130], "Germany": [420, 120],
+                "United Kingdom": [350, 105], "France": [390, 115], "Italy": [445, 140],
+                "South Korea": [660, 140], "Singapore": [620, 250], "Malaysia": [635, 260],
+                "Indonesia": [660, 285], "Thailand": [600, 245], "Vietnam": [615, 225],
+                "Turkey": [495, 155], "Iran": [530, 180], "Netherlands": [395, 108],
+                "Sweden": [440, 85], "Switzerland": [420, 130], "Spain": [340, 120],
+                "Ukraine": [475, 135], "Poland": [445, 125], "Mexico": [160, 180],
+                "Nigeria": [400, 265], "Egypt": [480, 200], "South Africa": [460, 320],
+                "Argentina": [250, 320], "Chile": [180, 300], "Saudi Arabia": [515, 195],
+                "United Arab Emirates": [545, 205], "Israel": [485, 175], "Pakistan": [560, 220],
+                "Bangladesh": [595, 230], "Philippines": [665, 235], "New Zealand": [760, 360],
+                "Norway": [420, 70], "Denmark": [435, 95], "Finland": [455, 80],
+                "Ireland": [335, 100], "Portugal": [325, 125], "Greece": [475, 165],
+                "Austria": [435, 125], "Hungary": [450, 145], "Czech Republic": [440, 120],
+                "Belgium": [380, 110], "Luxembourg": [385, 115], "Croatia": [460, 160],
+                "Serbia": [470, 165], "Romania": [485, 175], "Bulgaria": [490, 180],
+                "Slovakia": [445, 130], "Slovenia": [455, 145], "Bosnia and Herzegovina": [465, 155],
+                "Montenegro": [468, 160], "Albania": [480, 170], "Cyprus": [495, 195],
+                "Malta": [465, 155], "Iceland": [280, 55], "Greenland": [260, 40],
+                "Fiji": [770, 295], "Papua New Guinea": [735, 270], "Solomon Islands": [750, 275],
+                "Vanuatu": [765, 280], "New Caledonia": [755, 300], "French Polynesia": [700, 360],
+                "Samoa": [780, 355], "Tonga": [785, 360], "Cook Islands": [760, 370],
+                "Western Sahara": [360, 245], "Morocco": [345, 240], "Algeria": [385, 240],
+                "Tunisia": [395, 245], "Libya": [410, 245], "Sudan": [445, 255],
+                "Chad": [425, 270], "Niger": [385, 260], "Mali": [365, 255],
+                "Mauritania": [350, 250], "Senegal": [340, 255], "Gambia": [345, 258],
+                "Guinea-Bissau": [335, 260], "Guinea": [340, 265], "Sierra Leone": [345, 270],
+                "Liberia": [350, 272], "Cote d'Ivoire": [355, 270], "Ghana": [360, 270],
+                "Togo": [365, 272], "Benin": [370, 272], "Burkina Faso": [380, 265],
+                "Nigeria": [390, 275], "Cameroon": [400, 280], "Equatorial Guinea": [405, 288],
+                "Gabon": [410, 295], "Republic of the Congo": [415, 300], "Democratic Republic of the Congo": [425, 310],
+                "Central African Republic": [420, 285], "South Sudan": [445, 275], "Ethiopia": [455, 260],
+                "Eritrea": [465, 255], "Djibouti": [470, 260], "Somalia": [480, 265],
+                "Kenya": [475, 285], "Uganda": [465, 290], "Tanzania": [470, 310],
+                "Rwanda": [460, 295], "Burundi": [465, 300], "Malawi": [470, 330],
+                "Zambia": [455, 320], "Mozambique": [475, 345], "Zimbabwe": [450, 340],
+                "Botswana": [430, 355], "Namibia": [405, 350], "Angola": [385, 330],
+                "Madagascar": [500, 330], "Comoros": [485, 320], "Seychelles": [480, 310],
+                "Mauritius": [495, 335], "Maldives": [585, 215], "Sri Lanka": [595, 230],
+                "Bhutan": [565, 215], "Nepal": [560, 215], "Afghanistan": [520, 195],
+                "Kazakhstan": [485, 155], "Uzbekistan": [510, 180], "Turkmenistan": [525, 185],
+                "Kyrgyzstan": [510, 160], "Tajikistan": [520, 175], "Armenia": [495, 155],
+                "Azerbaijan": [500, 160], "Georgia": [485, 150], "Mongolia": [600, 135],
+                "North Korea": [645, 135], "Taiwan": [635, 175], "Hong Kong": [610, 185],
+                "Macau": [612, 190], "Brunei": [645, 270], "Cambodia": [590, 235],
+                "Laos": [585, 225], "Myanmar": [570, 230], "Jordan": [488, 185],
+                "Yemen": [525, 215], "Oman": [540, 210], "Qatar": [535, 205],
+                "Bahrain": [530, 210], "Kuwait": [520, 190], "Belarus": [460, 110],
+                "Moldova": [485, 145], "Estonia": [450, 95], "Latvia": [445, 105],
+                "Lithuania": [450, 110], "Liechtenstein": [415, 125], "Monaco": [395, 125],
+                "San Marino": [445, 145], "Vatican City": [445, 147], "Isle of Man": [345, 100],
+                "Guernsey": [355, 105], "Jersey": [358, 107], "Bahamas": [140, 165],
+                "Cuba": [155, 180], "Jamaica": [165, 175], "Haiti": [180, 185],
+                "Dominican Republic": [185, 180], "Puerto Rico": [175, 170], "Virgin Islands": [170, 165],
+                "Guadeloupe": [185, 190], "Martinique": [190, 195], "Trinidad and Tobago": [215, 245],
+                "Barbados": [205, 240], "Grenada": [200, 245], "Saint Lucia": [195, 240],
+                "Saint Vincent and the Grenadines": [195, 235], "Antigua and Barbuda": [185, 170],
+                "Dominica": [190, 190], "Saint Kitts and Nevis": [180, 165], "Anguilla": [175, 160],
+                "Montserrat": [180, 175], "Turks and Caicos Islands": [150, 155], "Cayman Islands": [185, 200],
+                "Aruba": [225, 230], "Bonaire": [230, 230], "Sint Eustatius": [190, 190],
+                "Saba": [190, 185], "Curacao": [230, 225], "Colombia": [215, 255],
+                "Venezuela": [225, 235], "Guyana": [245, 275], "Suriname": [255, 280],
+                "French Guiana": [265, 285], "Peru": [230, 280], "Bolivia": [215, 300],
+                "Paraguay": [235, 310], "Uruguay": [235, 345], "Ecuador": [195, 260],
+                "Galapagos": [175, 275], "Falkland Islands": [175, 340]
+            };
             
             data.countries.forEach(function(country) {
-                var coords = countryCoords[country.name];
-                if (coords) {
+                var pos = positions[country.name];
+                if (pos) {
                     var intensity = Math.min(country.value / maxCount, 1);
-                    var radius = 5 + (intensity * 15);
-                    var opacity = 0.3 + (intensity * 0.7);
-                    
-                    L.circleMarker(coords, {
-                        radius: radius,
-                        fillColor: '#00d4ff',
-                        color: '#00d4ff',
-                        weight: 2,
-                        opacity: opacity,
-                        fillOpacity: opacity * 0.6
-                    }).addTo(map).bindPopup('<b>' + country.name + '</b><br/>攻击次数: ' + country.value);
+                    var r = 4 + (intensity * 10);
+                    mapHTML += `<circle cx="${pos[0]}" cy="${pos[1]}" r="${r}" fill-opacity="${0.3 + intensity * 0.5}" stroke="#00d4ff" stroke-opacity="${0.5 + intensity * 0.5}" stroke-width="1"/>`;
                 }
             });
             
-            var legend = L.control({position: 'bottomright'});
-            legend.onAdd = function(map) {
-                var div = L.DomUtil.create('div', 'legend');
-                div.innerHTML = '<h4>攻击强度</h4>';
-                var grades = [0, 20, 50, 100];
-                var labels = [];
-                for (var i = 0; i < grades.length; i++) {
-                    div.innerHTML +=
-                        '<i style="background:rgba(0,212,255,' + (0.3 + (grades[i]/100)*0.7) + ');width:' + (5 + (grades[i]/100)*15) + 'px;height:' + (5 + (grades[i]/100)*15) + 'px;border-radius:50%;display:inline-block;margin-right:5px;"></i> ' +
-                        grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+') + '<br>';
-                }
-                return div;
-            };
-            legend.addTo(map);
+            mapHTML += `</g></svg>
+                <div style="position:absolute;bottom:20px;right:20px;background:rgba(0,0,0,0.6);padding:12px;border-radius:8px;">
+                    <div style="color:#94a3b8;font-size:12px;margin-bottom:8px;">攻击强度</div>
+                    <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
+                        <div style="width:8px;height:8px;border-radius:50%;background:#00d4ff;opacity:0.3;"></div>
+                        <span style="color:#94a3b8;font-size:11px;">0-20</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
+                        <div style="width:12px;height:12px;border-radius:50%;background:#00d4ff;opacity:0.5;"></div>
+                        <span style="color:#94a3b8;font-size:11px;">20-50</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
+                        <div style="width:16px;height:16px;border-radius:50%;background:#00d4ff;opacity:0.8;"></div>
+                        <span style="color:#94a3b8;font-size:11px;">100+</span>
+                    </div>
+                </div>
+                <div style="position:absolute;top:15px;left:15px;color:#94a3b8;font-size:11px;">提示: 圆圈大小表示攻击强度</div>
+            </div>`;
             
-            window.addEventListener('resize', function() {
-                map.invalidateSize();
-            });
+            container.innerHTML = mapHTML;
         }).catch(err => {
             console.error('地图数据加载失败:', err);
+            document.getElementById('worldMap').innerHTML = '<div style="text-align:center;padding-top:180px;color:#94a3b8;font-size:14px;">暂无攻击数据</div>';
         });
     </script>
 </body>
