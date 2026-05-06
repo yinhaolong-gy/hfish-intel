@@ -511,42 +511,83 @@ def generate_html(df, stats, accounts, week_compare):
         // --- 3. 世界地图 (ECharts) ---
         const mapDom = document.getElementById('worldMap');
         const mapChart = echarts.init(mapDom);
-        
-        // 映射表
+
         const countryNameMap = {
             "China": "中国", "United States": "美国", "Russia": "俄罗斯", "Canada": "加拿大",
-            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本"
+            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本",
+            "Germany": "德国", "United Kingdom": "英国", "France": "法国", "Italy": "意大利",
+            "South Korea": "韩国", "Singapore": "新加坡", "Malaysia": "马来西亚", "Indonesia": "印度尼西亚",
+            "Thailand": "泰国", "Vietnam": "越南", "Turkey": "土耳其", "Iran": "伊朗",
+            "Netherlands": "荷兰", "Sweden": "瑞典", "Switzerland": "瑞士", "Spain": "西班牙",
+            "Ukraine": "乌克兰", "Poland": "波兰", "Mexico": "墨西哥", "Nigeria": "尼日利亚",
+            "Egypt": "埃及", "South Africa": "南非", "Argentina": "阿根廷", "Chile": "智利",
+            "Saudi Arabia": "沙特阿拉伯", "United Arab Emirates": "阿联酋", "Israel": "以色列",
+            "Pakistan": "巴基斯坦", "Bangladesh": "孟加拉", "Philippines": "菲律宾", "New Zealand": "新西兰",
+            "Norway": "挪威", "Denmark": "丹麦", "Finland": "芬兰", "Ireland": "爱尔兰",
+            "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利"
         };
 
-        // 从本地读取国家 JSON
         fetch('country_data.json').then(res => res.json()).then(data => {
-            fetch('https://geo.datav.aliyun.com/areas_v3/bound/world.json')
-            .then(res => res.json())
-            .then(worldJson => {
-                echarts.registerMap('world', worldJson);
-                const mapOptions = {
-                    backgroundColor: 'transparent',
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
+            const mapOptions = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    borderColor: 'rgba(0, 212, 255, 0.3)',
+                    textStyle: { color: '#e2e8f0' },
+                    formatter: p => `${countryNameMap[p.name] || p.name}<br/>攻击次数: ${p.value || 0}`
+                },
+                visualMap: {
+                    show: true, left: 'left', bottom: '5%',
+                    min: 0, max: data.maxCount || 100,
+                    text: ['高', '低'],
+                    textStyle: { color: '#94a3b8' },
+                    inRange: { color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff'] }
+                },
+                series: [{
+                    type: 'map',
+                    map: 'world',
+                    roam: true,
+                    zoom: 1.2,
+                    center: [10, 10],
+                    itemStyle: {
+                        borderColor: '#334155', borderWidth: 1,
+                        areaColor: '#1e293b'
                     },
-                    visualMap: {
-                        min: 0, max: data.maxCount || 100,
-                        inRange: { color: ['#1e293b', '#00d4ff', '#06b6d4'] },
-                        textStyle: { color: '#94a3b8' }
+                    emphasis: {
+                        itemStyle: {
+                            areaColor: '#00d4ff',
+                            borderColor: '#00d4ff',
+                            borderWidth: 2
+                        },
+                        label: { show: true, color: '#fff' }
                     },
-                    geo: {
-                        map: 'world', roam: true, zoom: 1.2,
-                        itemStyle: { areaColor: '#1e293b', borderColor: '#334155' },
-                        emphasis: { itemStyle: { areaColor: '#00d4ff' } }
-                    },
-                    series: [{ type: 'map', geoIndex: 0, data: data.countries }]
-                };
-                mapChart.setOption(mapOptions);
-            });
+                    data: data.countries
+                }]
+            };
+
+            // 使用内置世界地图
+            mapChart.setOption(mapOptions);
         }).catch(() => {
-            mapDom.innerHTML = '<div style="color:#666;text-align:center;padding-top:150px;">暂无攻击源地理数据</div>';
+            mapDom.innerHTML = '<div style="color:#94a3b8;text-align:center;padding-top:150px;font-size:14px;">暂无攻击源地理数据</div>';
         });
+
+        // 使用 ECharts 内置世界地图
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/js/world.js';
+            script.onload = function() {
+                if (mapChart.getOption() && mapChart.getOption().series) {
+                    mapChart.setOption({
+                        series: [{
+                            type: 'map',
+                            map: 'world'
+                        }]
+                    });
+                }
+            };
+            document.head.appendChild(script);
+        })();
 
         window.addEventListener('resize', () => mapChart.resize());
     </script>
