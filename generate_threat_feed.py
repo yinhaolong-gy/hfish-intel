@@ -209,14 +209,16 @@ def generate_html(df, stats, accounts, week_compare):
             text-align: center; padding: 30px; margin-bottom: 30px;
             background: linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(124,58,237,0.06) 100%);
             border-radius: 20px; border: 1px solid rgba(0,212,255,0.12);
+            box-shadow: 0 8px 32px rgba(0,212,255,0.08);
         }
         .header h1 {
             font-size: 2.6em;
             background: linear-gradient(135deg, #00d4ff, #7c3aed);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
+            letter-spacing: 2px;
         }
-        .header .subtitle { color: #94a3b8; font-size: 0.9em; }
+        .header .subtitle { color: #94a3b8; font-size: 0.9em; letter-spacing: 1px; }
         .stats-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 15px; margin-bottom: 30px;
@@ -228,18 +230,25 @@ def generate_html(df, stats, accounts, week_compare):
             position: relative; overflow: hidden;
         }
         .stat-card:hover { transform: translateY(-5px); border-color: #00d4ff; box-shadow: 0 10px 30px rgba(0,212,255,0.15); }
-        .stat-number { font-size: 2.4em; font-weight: 700; color: #00d4ff; }
-        .stat-number.up { color: #4ade80; }
-        .stat-number.down { color: #f87171; }
-        .stat-label { color: #94a3b8; font-size: 0.85em; margin-top: 6px; }
+        .stat-number { font-size: 2.4em; font-weight: 700; color: #00d4ff; text-shadow: 0 0 20px rgba(0,212,255,0.3); }
+        .stat-number.up { color: #4ade80; text-shadow: 0 0 20px rgba(74,222,128,0.3); }
+        .stat-number.down { color: #f87171; text-shadow: 0 0 20px rgba(248,113,113,0.3); }
+        .stat-label { color: #94a3b8; font-size: 0.85em; margin-top: 6px; letter-spacing: 1px; }
         .section {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(0,212,255,0.1);
             border-radius: 20px; padding: 30px; margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            border-color: rgba(0,212,255,0.25);
+            box-shadow: 0 8px 30px rgba(0,212,255,0.1);
         }
         .section-title {
             font-size: 1.3em; color: #00d4ff; margin-bottom: 20px;
             border-bottom: 1px solid rgba(0,212,255,0.1); padding-bottom: 12px;
             display: flex; align-items: center; gap: 10px;
+            text-shadow: 0 0 15px rgba(0,212,255,0.3);
         }
         .chart-container { width: 100%; height: 380px; }
         .map-container { width: 100%; height: 500px; border-radius: 12px; position: relative; overflow: hidden; background: #0f172a; }
@@ -251,21 +260,30 @@ def generate_html(df, stats, accounts, week_compare):
             background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(124,58,237,0.04));
             border: 1px solid rgba(0,212,255,0.12); border-radius: 14px;
             padding: 20px; text-align: center; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .hp-item:hover { transform: translateY(-3px); border-color: #00d4ff; }
+        .hp-item:hover { transform: translateY(-3px); border-color: #00d4ff; box-shadow: 0 8px 25px rgba(0,212,255,0.15); }
         .hp-name { color: #94a3b8; font-size: 0.8em; margin-bottom: 8px; }
-        .hp-count { font-size: 1.8em; font-weight: 700; color: #00d4ff; }
+        .hp-count { font-size: 1.8em; font-weight: 700; color: #00d4ff; text-shadow: 0 0 10px rgba(0,212,255,0.3); }
         .hp-zero { color: #475569; }
         .top-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
         .list-item {
             background: rgba(0,0,0,0.35); border: 1px solid rgba(0,212,255,0.08);
             border-radius: 14px; padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
         }
-        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; }
+        .list-item:hover {
+            border-color: rgba(0,212,255,0.2);
+            box-shadow: 0 6px 20px rgba(0,212,255,0.1);
+        }
+        .list-item h3 { color: #00d4ff; margin-bottom: 12px; font-size: 1em; text-shadow: 0 0 10px rgba(0,212,255,0.2); }
         .rank-item {
             display: flex; justify-content: space-between; padding: 8px 0;
             border-bottom: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; font-size: 0.88em;
+            transition: all 0.2s ease;
         }
+        .rank-item:hover { background: rgba(0,212,255,0.05); padding-left: 8px; }
         .rank-value { font-weight: 700; color: #00d4ff; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.88em; color: #cbd5e1; }
         .data-table th { background: rgba(0,212,255,0.12); color: #00d4ff; padding: 12px; text-align: left; }
@@ -274,6 +292,12 @@ def generate_html(df, stats, accounts, week_compare):
         .badge {
             background: rgba(0,212,255,0.15); color: #00d4ff;
             padding: 4px 10px; border-radius: 16px; font-size: 0.82em;
+            border: 1px solid rgba(0,212,255,0.2);
+            transition: all 0.2s ease;
+        }
+        .badge:hover {
+            background: rgba(0,212,255,0.25);
+            box-shadow: 0 0 10px rgba(0,212,255,0.3);
         }
         .footer { text-align: center; color: #64748b; margin-top: 40px; font-size: 0.85em; }
         .warning { color: #f87171; font-weight: 500; }
@@ -491,139 +515,129 @@ def generate_html(df, stats, accounts, week_compare):
 
     <!-- 世界地图 -->
     <script>
+        var mapChart = echarts.init(document.getElementById('worldMap'));
+        
+        var countryNameMap = {
+            "China": "中国", "United States": "美国", "Russia": "俄罗斯", "Canada": "加拿大",
+            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本",
+            "Germany": "德国", "United Kingdom": "英国", "France": "法国", "Italy": "意大利",
+            "South Korea": "韩国", "Singapore": "新加坡", "Malaysia": "马来西亚", "Indonesia": "印度尼西亚",
+            "Thailand": "泰国", "Vietnam": "越南", "Turkey": "土耳其", "Iran": "伊朗",
+            "Netherlands": "荷兰", "Sweden": "瑞典", "Switzerland": "瑞士", "Spain": "西班牙",
+            "Ukraine": "乌克兰", "Poland": "波兰", "Mexico": "墨西哥", "Nigeria": "尼日利亚",
+            "Egypt": "埃及", "South Africa": "南非", "Argentina": "阿根廷", "Chile": "智利",
+            "Saudi Arabia": "沙特阿拉伯", "United Arab Emirates": "阿联酋", "Israel": "以色列",
+            "Pakistan": "巴基斯坦", "Bangladesh": "孟加拉", "Philippines": "菲律宾", "New Zealand": "新西兰",
+            "Norway": "挪威", "Denmark": "丹麦", "Finland": "芬兰", "Ireland": "爱尔兰",
+            "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利",
+            "Czech Republic": "捷克", "Belgium": "比利时", "Romania": "罗马尼亚", "Bulgaria": "保加利亚",
+            "Croatia": "克罗地亚", "Serbia": "塞尔维亚", "Slovakia": "斯洛伐克", "Slovenia": "斯洛文尼亚",
+            "Iceland": "冰岛", "Estonia": "爱沙尼亚", "Latvia": "拉脱维亚", "Lithuania": "立陶宛",
+            "Belarus": "白俄罗斯", "Moldova": "摩尔多瓦", "Kazakhstan": "哈萨克斯坦", "Uzbekistan": "乌兹别克斯坦",
+            "Turkmenistan": "土库曼斯坦", "Kyrgyzstan": "吉尔吉斯斯坦", "Tajikistan": "塔吉克斯坦",
+            "Afghanistan": "阿富汗", "Iraq": "伊拉克", "Syria": "叙利亚", "Lebanon": "黎巴嫩",
+            "Jordan": "约旦", "Yemen": "也门", "Oman": "阿曼", "Qatar": "卡塔尔",
+            "Bahrain": "巴林", "Kuwait": "科威特", "Georgia": "格鲁吉亚", "Armenia": "亚美尼亚",
+            "Azerbaijan": "阿塞拜疆", "Mongolia": "蒙古", "North Korea": "朝鲜", "Taiwan": "台湾",
+            "Hong Kong": "香港", "Macau": "澳门", "Myanmar": "缅甸", "Cambodia": "柬埔寨",
+            "Laos": "老挝", "Brunei": "文莱", "Sri Lanka": "斯里兰卡", "Nepal": "尼泊尔",
+            "Bhutan": "不丹", "Maldives": "马尔代夫", "Colombia": "哥伦比亚", "Venezuela": "委内瑞拉",
+            "Peru": "秘鲁", "Bolivia": "玻利维亚", "Paraguay": "巴拉圭", "Uruguay": "乌拉圭",
+            "Ecuador": "厄瓜多尔", "Guyana": "圭亚那", "Suriname": "苏里南", "Panama": "巴拿马",
+            "Costa Rica": "哥斯达黎加", "Nicaragua": "尼加拉瓜", "Honduras": "洪都拉斯",
+            "El Salvador": "萨尔瓦多", "Guatemala": "危地马拉", "Belize": "伯利兹", "Cuba": "古巴",
+            "Jamaica": "牙买加", "Haiti": "海地", "Dominican Republic": "多米尼加", "Puerto Rico": "波多黎各"
+        };
+        
         fetch('country_data.json').then(res => res.json()).then(data => {
-            var container = document.getElementById('worldMap');
-            var mapHTML = `
-            <div style="width:100%;height:100%;background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);position:relative;">
-                <svg viewBox="0 0 800 400" style="width:100%;height:100%;">
-                    <defs>
-                        <filter id="glow2">
-                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                    </defs>
-                    
-                    <g fill="#1e293b" stroke="#334155" stroke-width="0.8">
-                        <path d="M60,100 L100,80 L140,100 L130,140 L95,155 L65,145 Z"/>
-                        <path d="M160,115 L220,95 L260,120 L245,165 L205,180 L170,165 Z"/>
-                        <path d="M280,90 L380,75 L430,115 L410,185 L330,205 L285,170 Z"/>
-                        <path d="M480,65 L620,55 L670,100 L645,180 L530,200 L470,160 Z"/>
-                        <path d="M510,220 L590,205 L640,240 L610,295 L530,310 L495,275 Z"/>
-                        <path d="M680,100 L750,85 L785,125 L760,180 L705,195 L665,160 Z"/>
-                        <path d="M60,240 L110,225 L145,255 L125,300 L85,310 L65,275 Z"/>
-                        <path d="M180,215 L280,200 L330,240 L295,305 L220,320 L185,280 Z"/>
-                        <path d="M380,240 L460,225 L510,260 L480,315 L420,325 L385,285 Z"/>
-                        <path d="M580,220 L670,210 L710,250 L675,305 L610,315 L575,275 Z"/>
-                        <path d="M720,300 L780,290 L800,320 L780,360 L730,370 L710,335 Z"/>
-                    </g>
-                    
-                    <g fill="#00d4ff" filter="url(#glow2)">`;
-            
-            var maxCount = data.maxCount || 100;
-            var positions = {
-                "China": [550, 145], "United States": [200, 130], "Russia": [520, 100],
-                "Canada": [220, 80], "Brazil": [270, 270], "Australia": [730, 320],
-                "India": [590, 235], "Japan": [700, 130], "Germany": [420, 120],
-                "United Kingdom": [350, 105], "France": [390, 115], "Italy": [445, 140],
-                "South Korea": [660, 140], "Singapore": [620, 250], "Malaysia": [635, 260],
-                "Indonesia": [660, 285], "Thailand": [600, 245], "Vietnam": [615, 225],
-                "Turkey": [495, 155], "Iran": [530, 180], "Netherlands": [395, 108],
-                "Sweden": [440, 85], "Switzerland": [420, 130], "Spain": [340, 120],
-                "Ukraine": [475, 135], "Poland": [445, 125], "Mexico": [160, 180],
-                "Nigeria": [400, 265], "Egypt": [480, 200], "South Africa": [460, 320],
-                "Argentina": [250, 320], "Chile": [180, 300], "Saudi Arabia": [515, 195],
-                "United Arab Emirates": [545, 205], "Israel": [485, 175], "Pakistan": [560, 220],
-                "Bangladesh": [595, 230], "Philippines": [665, 235], "New Zealand": [760, 360],
-                "Norway": [420, 70], "Denmark": [435, 95], "Finland": [455, 80],
-                "Ireland": [335, 100], "Portugal": [325, 125], "Greece": [475, 165],
-                "Austria": [435, 125], "Hungary": [450, 145], "Czech Republic": [440, 120],
-                "Belgium": [380, 110], "Luxembourg": [385, 115], "Croatia": [460, 160],
-                "Serbia": [470, 165], "Romania": [485, 175], "Bulgaria": [490, 180],
-                "Slovakia": [445, 130], "Slovenia": [455, 145], "Bosnia and Herzegovina": [465, 155],
-                "Montenegro": [468, 160], "Albania": [480, 170], "Cyprus": [495, 195],
-                "Malta": [465, 155], "Iceland": [280, 55], "Greenland": [260, 40],
-                "Fiji": [770, 295], "Papua New Guinea": [735, 270], "Solomon Islands": [750, 275],
-                "Vanuatu": [765, 280], "New Caledonia": [755, 300], "French Polynesia": [700, 360],
-                "Samoa": [780, 355], "Tonga": [785, 360], "Cook Islands": [760, 370],
-                "Western Sahara": [360, 245], "Morocco": [345, 240], "Algeria": [385, 240],
-                "Tunisia": [395, 245], "Libya": [410, 245], "Sudan": [445, 255],
-                "Chad": [425, 270], "Niger": [385, 260], "Mali": [365, 255],
-                "Mauritania": [350, 250], "Senegal": [340, 255], "Gambia": [345, 258],
-                "Guinea-Bissau": [335, 260], "Guinea": [340, 265], "Sierra Leone": [345, 270],
-                "Liberia": [350, 272], "Cote d'Ivoire": [355, 270], "Ghana": [360, 270],
-                "Togo": [365, 272], "Benin": [370, 272], "Burkina Faso": [380, 265],
-                "Nigeria": [390, 275], "Cameroon": [400, 280], "Equatorial Guinea": [405, 288],
-                "Gabon": [410, 295], "Republic of the Congo": [415, 300], "Democratic Republic of the Congo": [425, 310],
-                "Central African Republic": [420, 285], "South Sudan": [445, 275], "Ethiopia": [455, 260],
-                "Eritrea": [465, 255], "Djibouti": [470, 260], "Somalia": [480, 265],
-                "Kenya": [475, 285], "Uganda": [465, 290], "Tanzania": [470, 310],
-                "Rwanda": [460, 295], "Burundi": [465, 300], "Malawi": [470, 330],
-                "Zambia": [455, 320], "Mozambique": [475, 345], "Zimbabwe": [450, 340],
-                "Botswana": [430, 355], "Namibia": [405, 350], "Angola": [385, 330],
-                "Madagascar": [500, 330], "Comoros": [485, 320], "Seychelles": [480, 310],
-                "Mauritius": [495, 335], "Maldives": [585, 215], "Sri Lanka": [595, 230],
-                "Bhutan": [565, 215], "Nepal": [560, 215], "Afghanistan": [520, 195],
-                "Kazakhstan": [485, 155], "Uzbekistan": [510, 180], "Turkmenistan": [525, 185],
-                "Kyrgyzstan": [510, 160], "Tajikistan": [520, 175], "Armenia": [495, 155],
-                "Azerbaijan": [500, 160], "Georgia": [485, 150], "Mongolia": [600, 135],
-                "North Korea": [645, 135], "Taiwan": [635, 175], "Hong Kong": [610, 185],
-                "Macau": [612, 190], "Brunei": [645, 270], "Cambodia": [590, 235],
-                "Laos": [585, 225], "Myanmar": [570, 230], "Jordan": [488, 185],
-                "Yemen": [525, 215], "Oman": [540, 210], "Qatar": [535, 205],
-                "Bahrain": [530, 210], "Kuwait": [520, 190], "Belarus": [460, 110],
-                "Moldova": [485, 145], "Estonia": [450, 95], "Latvia": [445, 105],
-                "Lithuania": [450, 110], "Liechtenstein": [415, 125], "Monaco": [395, 125],
-                "San Marino": [445, 145], "Vatican City": [445, 147], "Isle of Man": [345, 100],
-                "Guernsey": [355, 105], "Jersey": [358, 107], "Bahamas": [140, 165],
-                "Cuba": [155, 180], "Jamaica": [165, 175], "Haiti": [180, 185],
-                "Dominican Republic": [185, 180], "Puerto Rico": [175, 170], "Virgin Islands": [170, 165],
-                "Guadeloupe": [185, 190], "Martinique": [190, 195], "Trinidad and Tobago": [215, 245],
-                "Barbados": [205, 240], "Grenada": [200, 245], "Saint Lucia": [195, 240],
-                "Saint Vincent and the Grenadines": [195, 235], "Antigua and Barbuda": [185, 170],
-                "Dominica": [190, 190], "Saint Kitts and Nevis": [180, 165], "Anguilla": [175, 160],
-                "Montserrat": [180, 175], "Turks and Caicos Islands": [150, 155], "Cayman Islands": [185, 200],
-                "Aruba": [225, 230], "Bonaire": [230, 230], "Sint Eustatius": [190, 190],
-                "Saba": [190, 185], "Curacao": [230, 225], "Colombia": [215, 255],
-                "Venezuela": [225, 235], "Guyana": [245, 275], "Suriname": [255, 280],
-                "French Guiana": [265, 285], "Peru": [230, 280], "Bolivia": [215, 300],
-                "Paraguay": [235, 310], "Uruguay": [235, 345], "Ecuador": [195, 260],
-                "Galapagos": [175, 275], "Falkland Islands": [175, 340]
-            };
-            
-            data.countries.forEach(function(country) {
-                var pos = positions[country.name];
-                if (pos) {
-                    var intensity = Math.min(country.value / maxCount, 1);
-                    var r = 4 + (intensity * 10);
-                    mapHTML += `<circle cx="${pos[0]}" cy="${pos[1]}" r="${r}" fill-opacity="${0.3 + intensity * 0.5}" stroke="#00d4ff" stroke-opacity="${0.5 + intensity * 0.5}" stroke-width="1"/>`;
-                }
+            mapChart.showLoading();
+            fetch('https://geo.datav.aliyun.com/areas_v3/bound/world.json')
+            .then(response => response.json())
+            .then(worldJson => {
+                echarts.registerMap('world', worldJson);
+                
+                var chartData = data.countries.map(c => ({
+                    name: c.name,
+                    value: c.value
+                }));
+                
+                var maxVal = data.maxCount || 100;
+                
+                var option = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        borderColor: 'rgba(0, 212, 255, 0.3)',
+                        textStyle: { color: '#e2e8f0' },
+                        formatter: function(params) {
+                            var name = countryNameMap[params.name] || params.name;
+                            return name + '<br/>攻击次数: ' + (params.value || 0);
+                        }
+                    },
+                    visualMap: {
+                        show: true,
+                        left: 'left',
+                        bottom: '5%',
+                        min: 0,
+                        max: maxVal,
+                        text: ['高', '低'],
+                        textStyle: { color: '#94a3b8' },
+                        inRange: {
+                            color: ['#1e293b', '#0d47a1', '#1565c0', '#00d4ff', '#06b6d4']
+                        },
+                        calculable: true
+                    },
+                    geo: {
+                        map: 'world',
+                        roam: true,
+                        scaleLimit: { min: 1, max: 8 },
+                        zoom: 1.2,
+                        center: [10, 10],
+                        label: { show: false },
+                        itemStyle: {
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            areaColor: '#1e293b',
+                            shadowColor: 'rgba(0, 0, 0, 0.5)',
+                            shadowBlur: 10
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                areaColor: '#00d4ff',
+                                borderColor: '#00d4ff',
+                                borderWidth: 2
+                            },
+                            label: {
+                                show: true,
+                                color: '#fff',
+                                fontSize: 12
+                            }
+                        },
+                        select: {
+                            disabled: true
+                        }
+                    },
+                    series: [{
+                        name: '攻击分布',
+                        type: 'map',
+                        geoIndex: 0,
+                        data: chartData
+                    }]
+                };
+                
+                mapChart.setOption(option);
+                mapChart.hideLoading();
+                
+                window.addEventListener('resize', function() {
+                    mapChart.resize();
+                });
+            }).catch(function() {
+                mapChart.hideLoading();
+                document.getElementById('worldMap').innerHTML = '<div style="text-align:center;padding-top:180px;color:#94a3b8;font-size:14px;">地图加载失败，请检查网络连接</div>';
             });
-            
-            mapHTML += `</g></svg>
-                <div style="position:absolute;bottom:20px;right:20px;background:rgba(0,0,0,0.6);padding:12px;border-radius:8px;">
-                    <div style="color:#94a3b8;font-size:12px;margin-bottom:8px;">攻击强度</div>
-                    <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
-                        <div style="width:8px;height:8px;border-radius:50%;background:#00d4ff;opacity:0.3;"></div>
-                        <span style="color:#94a3b8;font-size:11px;">0-20</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
-                        <div style="width:12px;height:12px;border-radius:50%;background:#00d4ff;opacity:0.5;"></div>
-                        <span style="color:#94a3b8;font-size:11px;">20-50</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
-                        <div style="width:16px;height:16px;border-radius:50%;background:#00d4ff;opacity:0.8;"></div>
-                        <span style="color:#94a3b8;font-size:11px;">100+</span>
-                    </div>
-                </div>
-                <div style="position:absolute;top:15px;left:15px;color:#94a3b8;font-size:11px;">提示: 圆圈大小表示攻击强度</div>
-            </div>`;
-            
-            container.innerHTML = mapHTML;
-        }).catch(err => {
-            console.error('地图数据加载失败:', err);
+        }).catch(function() {
+            mapChart.hideLoading();
             document.getElementById('worldMap').innerHTML = '<div style="text-align:center;padding-top:180px;color:#94a3b8;font-size:14px;">暂无攻击数据</div>';
         });
     </script>
