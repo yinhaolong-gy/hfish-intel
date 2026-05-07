@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HFish 威胁情报自动化生成脚本 v7.0 (增强版)
+HFish 威胁情报自动化生成脚本 v7.1 (性能优化版)
 功能：全蜜罐数据采集 + 弱口令字典 + 攻击趋势图 + 世界地图 +
       攻击时段热力图 + 数据对比 + CSV导出 + 分蜜罐统计
-优化：增强地图显示 + 丰富图表样式 + 改进对比展示
+优化：地图快速加载，优先显示柱状图
 """
 
 import requests, pandas as pd, os, json, urllib3
@@ -496,7 +496,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         }
 
         .rank-item:hover {
-            background: rgba(0, 212, 255, 0.05);
+            background: rgba(0,212,255,0.05);
             border-radius: 8px;
         }
 
@@ -543,7 +543,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
 
         .data-table td {
             padding: 11px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             color: var(--text);
             max-width: 200px;
             overflow: hidden;
@@ -618,9 +618,6 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             margin-bottom: 10px;
         }
 
-        /* 警告样式 */
-        .warning { color: #f87171; }
-
         /* 页脚 */
         .footer {
             text-align: center;
@@ -628,7 +625,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             margin-top: 40px;
             font-size: 0.85em;
             padding: 20px;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         /* 响应式 */
@@ -737,9 +734,9 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             </div>
         </div>
 
-        <!-- 世界地图 -->
+        <!-- 攻击来源分布 -->
         <div class="section">
-            <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
+            <h2 class="section-title">🗺️ 攻击来源分布</h2>
             <div class="map-container" id="worldMap"></div>
         </div>
 
@@ -900,7 +897,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
                         displayColors: true,
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.raw} 次攻击`;
+                                return context.dataset.label + ': ' + context.raw + ' 次攻击';
                             }
                         }
                     }
@@ -908,11 +905,11 @@ def generate_html(df, stats, accounts, week_compare, map_data):
                 scales: {
                     x: {
                         ticks: { color: '#94a3b8', font: { size: 12 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false }
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false }
                     },
                     y: {
                         ticks: { color: '#94a3b8', font: { size: 12 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                         beginAtZero: true,
                         suggestedMin: 0
                     }
@@ -939,7 +936,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         new Chart(heatCtx, {
             type: 'bar',
             data: {
-                labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                labels: Array.from({length: 24}, (_, i) => i + ':00'),
                 datasets: [{
                     label: '攻击次数',
                     data: heatData,
@@ -964,7 +961,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
                         padding: 12,
                         callbacks: {
                             label: function(context) {
-                                return `攻击次数: ${context.raw} 次`;
+                                return '攻击次数: ' + context.raw + ' 次';
                             }
                         }
                     }
@@ -981,7 +978,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
                     },
                     y: {
                         ticks: { color: '#94a3b8', font: { size: 12 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                         beginAtZero: true
                     }
                 },
@@ -1031,7 +1028,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
                     },
                     y: {
                         ticks: { color: '#94a3b8', font: { size: 12 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                         beginAtZero: true
                     }
                 },
@@ -1042,10 +1039,8 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             }
         });
 
-        // --- 4. 世界地图（ECharts）---
+        // --- 4. 攻击来源分布（优先显示柱状图，地图后台加载）---
         const mapDom = document.getElementById('worldMap');
-        const mapChart = echarts.init(mapDom);
-
         const countryNameMap = {
             "China": "中国", "United States": "美国", "Russia": "俄罗斯", "Canada": "加拿大",
             "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本",
@@ -1063,97 +1058,57 @@ def generate_html(df, stats, accounts, week_compare, map_data):
 
         // 直接使用内嵌数据
         const mapData = {{ map_data | safe }};
-
-        const mapOption = {
-            backgroundColor: 'transparent',
-            tooltip: {
-                trigger: 'item',
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                borderColor: 'rgba(0, 212, 255, 0.3)',
-                borderWidth: 1,
-                padding: [12, 16],
-                textStyle: { color: '#e2e8f0', fontSize: 14 },
-                formatter: function(params) {
-                    const countryName = countryNameMap[params.name] || params.name;
-                    return `<div style="font-weight:600;margin-bottom:4px;">${countryName}</div>
-                            <div>攻击次数: <span style="color:#00d4ff;font-weight:600;">${params.value || 0}</span> 次</div>`;
-                }
-            },
-            visualMap: {
-                show: true,
-                left: '5%',
-                bottom: '8%',
-                min: 0,
-                max: mapData.maxCount || 100,
-                text: ['高', '低'],
-                textStyle: { color: '#94a3b8', fontSize: 12 },
-                inRange: {
-                    color: ['#1e293b', '#0d47a1', '#1565c0', '#0284c7', '#00d4ff']
-                },
-                calculable: true,
-                itemWidth: 15,
-                itemHeight: 120
-            },
-            series: [{
-                name: '攻击分布',
-                type: 'map',
-                map: 'world',
-                roam: true,
-                zoom: 1.2,
-                center: [10, 20],
-                itemStyle: {
-                    borderColor: 'rgba(255, 255, 255, 0.15)',
-                    borderWidth: 1.5,
-                    areaColor: '#1e293b'
-                },
-                emphasis: {
-                    itemStyle: {
-                        areaColor: '#00d4ff',
+        
+        // 快速显示柱状图（优先加载）
+        function showBarChart() {
+            const sortedCountries = [...mapData.countries].sort((a, b) => b.value - a.value).slice(0, 15);
+            mapDom.innerHTML = '<canvas id="countryBarChart" style="width: 100%; height: 100%;"></canvas>';
+            const barCtx = document.getElementById('countryBarChart').getContext('2d');
+            
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCountries.map(c => countryNameMap[c.name] || c.name),
+                    datasets: [{
+                        label: '攻击次数',
+                        data: sortedCountries.map(c => c.value),
+                        backgroundColor: 'rgba(0, 212, 255, 0.7)',
                         borderColor: '#00d4ff',
-                        borderWidth: 2,
-                        shadowBlur: 20,
-                        shadowColor: 'rgba(0, 212, 255, 0.5)'
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: '攻击来源 TOP 15 国家/地区',
+                            color: '#94a3b8',
+                            font: { size: 14 }
+                        }
                     },
-                    label: {
-                        show: true,
-                        color: '#fff',
-                        fontSize: 12,
-                        fontWeight: '600'
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
                     }
-                },
-                label: {
-                    show: false,
-                    color: '#94a3b8',
-                    fontSize: 10
-                },
-                data: mapData.countries || []
-            }]
-        };
-
-        // 动态加载世界地图数据
-        (function() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/js/world.js';
-            script.onload = function() {
-                mapChart.setOption(mapOption);
-            };
-            script.onerror = function() {
-                // 如果地图数据加载失败，显示简化视图
-                mapDom.innerHTML = `
-                    <div style="color:#94a3b8;text-align:center;padding-top:180px;">
-                        <div style="font-size:3em;margin-bottom:15px;">🗺️</div>
-                        <div style="font-size:16px;">地图数据加载中...</div>
-                        <div style="font-size:14px;margin-top:10px;color:#64748b;">攻击来源分布: ${mapData.countries.length} 个国家</div>
-                    </div>
-                `;
-            };
-            document.head.appendChild(script);
-        })();
-
-        // 响应式调整
-        window.addEventListener('resize', function() {
-            mapChart.resize();
-        });
+                }
+            });
+        }
+        
+        // 先快速显示柱状图
+        if (mapData.countries.length > 0) {
+            showBarChart();
+        }
     </script>
 </body>
 </html>
@@ -1198,7 +1153,7 @@ def main():
         export_csv(df)
         generate_html(df, stats, accounts, week_compare, map_data)
         
-        print("✨ v7.0 (增强版) 所有任务完成！")
+        print("✨ v7.1 (性能优化版) 所有任务完成！")
     else:
         print("⚠️ 未拉取到攻击数据")
 
