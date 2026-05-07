@@ -230,8 +230,9 @@
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,212,255,0.08);
             border-radius: 16px;
-            padding: 22px;
+            padding: 18px;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
 
         .list-item:hover {
@@ -252,22 +253,42 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             font-size: 0.88em;
             transition: all 0.2s ease;
+            word-break: break-all;
+            gap: 10px;
         }
 
         .rank-item:hover {
-            background: rgba(0,212,255,0.05);
-            padding-left: 8px;
+            background: rgba(0, 212, 255, 0.05);
             border-radius: 8px;
+        }
+
+        .rank-item span:first-child {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
         }
 
         .rank-value {
             font-weight: 700;
             color: var(--primary);
             font-size: 1.1em;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .warning {
+            color: #f87171;
+            font-family: monospace;
+            word-break: break-all;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* 表格 */
@@ -400,7 +421,7 @@
         <!-- 头部 -->
         <div class="header">
             <h1>🛡️ HFish 威胁情报监控中心</h1>
-            <p class="subtitle">📊 监控周期: 2026-02-06 14:54 ~ 2026-05-07 14:54 | 最后更新: 2026-05-07 14:54:31</p>
+            <p class="subtitle">📊 监控周期: 2026-02-06 14:58 ~ 2026-05-07 14:58 | 最后更新: 2026-05-07 14:58:10</p>
         </div>
 
         <!-- 统计卡片 -->
@@ -414,7 +435,7 @@
                 <div class="stat-label">独立攻击IP</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">27638</div>
+                <div class="stat-number">27651</div>
                 <div class="stat-label">账号资产数据</div>
             </div>
             <div class="stat-card">
@@ -597,7 +618,7 @@
                 <div class="list-item">
                     <h3>🔑 弱口令 TOP 10</h3>
                     
-                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2993次</span></div>
+                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2994次</span></div>
                     
                     <div class="rank-item"><span class="warning">123</span><span class="rank-value">170次</span></div>
                     
@@ -621,7 +642,7 @@
                 <div class="list-item">
                     <h3>👤 高频用户名 TOP 5</h3>
                     
-                    <div class="rank-item"><span>root</span><span class="rank-value">17232次</span></div>
+                    <div class="rank-item"><span>root</span><span class="rank-value">17238次</span></div>
                     
                     <div class="rank-item"><span>test</span><span class="rank-value">201次</span></div>
                     
@@ -1468,7 +1489,7 @@
 
         <!-- 页脚 -->
         <div class="footer">
-            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-07 14:54:31</p>
+            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-07 14:58:10</p>
         </div>
     </div>
 

@@ -215,14 +215,22 @@ def generate_html(df, stats, accounts, week_compare, map_data):
     heatmap_list = stats.get("heatmap_data", [0] * 24)
     heatmap_data = json.dumps([int(x) if hasattr(x, 'item') else x for x in heatmap_list])
     
-    # 弱口令和用户名统计
-    top_passwords = [(p, c) for p, c in Counter(
+    # 弱口令和用户名统计（对超长内容进行截断）
+    def safe_truncate(text, max_len=30):
+        """安全截断文本"""
+        if not isinstance(text, str):
+            text = str(text)
+        if len(text) > max_len:
+            return text[:max_len] + "..."
+        return text
+    
+    top_passwords = [(safe_truncate(p, 40), c) for p, c in Counter(
         [a.get("password", "") for a in accounts if a.get("password")]
     ).most_common(10)]
     
-    top_usernames = Counter(
+    top_usernames = [(safe_truncate(u, 30), c) for u, c in Counter(
         [a.get("username", "") for a in accounts if a.get("username")]
-    ).most_common(5)
+    ).most_common(5)]
 
     template = Template("""
 <!DOCTYPE html>
@@ -456,8 +464,9 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,212,255,0.08);
             border-radius: 16px;
-            padding: 22px;
+            padding: 18px;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
 
         .list-item:hover {
@@ -478,22 +487,42 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             font-size: 0.88em;
             transition: all 0.2s ease;
+            word-break: break-all;
+            gap: 10px;
         }
 
         .rank-item:hover {
-            background: rgba(0,212,255,0.05);
-            padding-left: 8px;
+            background: rgba(0, 212, 255, 0.05);
             border-radius: 8px;
+        }
+
+        .rank-item span:first-child {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
         }
 
         .rank-value {
             font-weight: 700;
             color: var(--primary);
             font-size: 1.1em;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .warning {
+            color: #f87171;
+            font-family: monospace;
+            word-break: break-all;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* 表格 */
