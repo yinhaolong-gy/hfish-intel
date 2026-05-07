@@ -1,96 +1,1810 @@
+
 <!DOCTYPE html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>HFish 威胁情报监控中心</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-<style>
-:root{--bg:#0a0a14;--p:#00d4ff;--a:#7c3aed;--t:#e2e8f0;--m:#94a3b8;--b:rgba(0,212,255,0.12)}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#0a0a14,#0f172a 40%,#1e1b4b 70%,#0a0a14);min-height:100vh;padding:15px;color:var(--t)}
-.container{max-width:1440px;margin:0 auto}
-.header{text-align:center;padding:25px 20px;margin-bottom:25px;background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(124,58,237,0.06));border-radius:20px;border:1px solid var(--b)}
-.header h1{font-size:clamp(1.4em,4vw,2.5em);background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.sub{color:var(--m);font-size:.85em;margin-top:6px}
-.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:25px}
-.sc{background:rgba(255,255,255,0.04);border:1px solid var(--b);border-radius:14px;padding:18px 10px;text-align:center;transition:all .3s;overflow:hidden}
-.sc:hover{transform:translateY(-4px);border-color:var(--p)}
-.sn{font-size:clamp(1.5em,3vw,2.2em);font-weight:700;color:var(--p);word-break:break-all}
-.sl{color:var(--m);font-size:.75em;margin-top:4px}
-.section{background:rgba(255,255,255,0.02);border:1px solid var(--b);border-radius:16px;padding:20px;margin-bottom:20px}
-.st{font-size:1.15em;color:var(--p);margin-bottom:16px;border-bottom:1px solid var(--b);padding-bottom:10px}
-.cb{width:100%;height:350px}.mb{width:100%;height:500px;min-height:400px}.hb{width:100%;height:280px}
-.hg{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px}
-.hi{background:rgba(0,212,255,0.05);border:1px solid var(--b);border-radius:12px;padding:14px;text-align:center}
-.hi:hover{transform:translateY(-2px);border-color:var(--p)}
-.hn{color:var(--m);font-size:.7em;word-break:break-all}.hc{font-size:1.4em;font-weight:700;color:var(--p)}.hz{color:#475569}
-.tl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.li{background:rgba(0,0,0,0.3);border:1px solid rgba(0,212,255,0.06);border-radius:12px;padding:16px;overflow:hidden}
-.li h3{color:var(--p);font-size:.95em;margin-bottom:10px}
-.rr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:.82em;gap:8px}
-.rr span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
-.rv{font-weight:700;color:var(--p);white-space:nowrap;flex-shrink:0}
-table{width:100%;border-collapse:collapse;font-size:.82em;margin-top:10px}
-th{background:rgba(0,212,255,0.1);color:var(--p);padding:10px;text-align:left}
-td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-tr:hover td{background:rgba(0,212,255,0.03)}
-.badge{background:rgba(0,212,255,0.12);color:var(--p);padding:3px 8px;border-radius:12px;font-size:.78em}
-.footer{text-align:center;color:#555;margin-top:30px;font-size:.8em}
-.warn{color:#f87171;font-weight:500}.up{color:#4ade80}.down{color:#f87171}
-.cr{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
-.ci{background:rgba(0,0,0,0.3);border-radius:12px;padding:15px 22px;text-align:center}
-.cn{font-size:1.8em;font-weight:700}.cl{color:var(--m);font-size:.75em}
-@media(max-width:768px){.cb{height:250px}.mb{height:380px}.sg{grid-template-columns:repeat(3,1fr)}.tl{grid-template-columns:1fr}}
-@media(max-width:480px){.sg{grid-template-columns:repeat(2,1fr)}.header h1{font-size:1.3em}}
-</style></head><body><div class="container">
-<div class="header"><h1>🛡️ HFish 威胁情报监控中心</h1><p class="sub">2026-02-06 14:38 ~ 2026-05-07 14:38 | 更新: 2026-05-07 14:38:08</p></div>
-<div class="sg">
-<div class="sc"><div class="sn">5000</div><div class="sl">总攻击次数</div></div>
-<div class="sc"><div class="sn">139</div><div class="sl">独立IP</div></div>
-<div class="sc"><div class="sn">27582</div><div class="sl">账号资产</div></div>
-<div class="sc"><div class="sn">6</div><div class="sl">活跃蜜罐</div></div>
-<div class="sc"><div class="sn">5000</div><div class="sl">本周攻击</div></div>
-<div class="sc"><div class="sn ">0</div><div class="sl">无对比数据</div></div>
-</div>
-<div class="section"><h2 class="st">📈 攻击趋势（近7天）</h2><div class="cb"><canvas id="tc"></canvas></div></div>
-<div class="section"><h2 class="st">🔥 攻击时段分布</h2><div class="hb"><canvas id="hc"></canvas></div></div>
-<div class="section"><h2 class="st">📊 本周 vs 上周</h2><div class="cr">
-<div class="ci"><div class="cn" style="color:var(--p)">5000</div><div class="cl">本周</div></div>
-<div class="ci"><div class="cn" style="color:var(--m)">0</div><div class="cl">上周</div></div>
-<div class="ci"><div class="cn ">0</div><div class="cl">无对比数据</div></div>
-</div></div>
-<div class="section"><h2 class="st">🗺️ 攻击来源全球分布</h2><div class="mb" id="wm"></div></div>
-<div class="section"><h2 class="st">🎯 各蜜罐攻击次数</h2><div class="hg">
-<div class="hi"><div class="hn">SSH蜜罐</div><div class="hc ">4539</div></div><div class="hi"><div class="hn">FTP蜜罐</div><div class="hc ">8</div></div><div class="hi"><div class="hn">Telnet蜜罐</div><div class="hc ">330</div></div><div class="hi"><div class="hn">HTTP代理蜜罐</div><div class="hc hz">0</div></div><div class="hi"><div class="hn">MYSQL蜜罐</div><div class="hc ">50</div></div><div class="hi"><div class="hn">REDIS蜜罐</div><div class="hc ">44</div></div><div class="hi"><div class="hn">Elasticsearch蜜罐</div><div class="hc ">29</div></div><div class="hi"><div class="hn">CUSTOM蜜罐</div><div class="hc hz">0</div></div><div class="hi"><div class="hn">TCP端口监听</div><div class="hc hz">0</div></div><div class="hi"><div class="hn">Nginx蜜罐</div><div class="hc hz">0</div></div>
-</div></div>
-<div class="section"><h2 class="st">📊 攻击统计分析</h2><div class="tl">
-<div class="li"><h3>🔝 Top 10 攻击IP</h3><div class="rr"><span title="93.188.83.96">93.188.83.96</span><span class="rv">3163</span></div><div class="rr"><span title="45.148.10.173">45.148.10.173</span><span class="rv">1149</span></div><div class="rr"><span title="161.35.123.102">161.35.123.102</span><span class="rv">119</span></div><div class="rr"><span title="125.67.61.66">125.67.61.66</span><span class="rv">84</span></div><div class="rr"><span title="112.124.57.236">112.124.57.236</span><span class="rv">64</span></div><div class="rr"><span title="45.153.34.108">45.153.34.108</span><span class="rv">38</span></div><div class="rr"><span title="35.240.31.83">35.240.31.83</span><span class="rv">32</span></div><div class="rr"><span title="34.140.176.231">34.140.176.231</span><span class="rv">32</span></div><div class="rr"><span title="34.79.123.86">34.79.123.86</span><span class="rv">32</span></div><div class="rr"><span title="85.11.167.2">85.11.167.2</span><span class="rv">30</span></div></div>
-<div class="li"><h3>🌍 来源国家</h3><div class="rr"><span>俄罗斯</span><span class="rv">3168</span></div><div class="rr"><span>欧洲地区</span><span class="rv">1187</span></div><div class="rr"><span>中国</span><span class="rv">209</span></div><div class="rr"><span>美国</span><span class="rv">197</span></div><div class="rr"><span>比利时</span><span class="rv">67</span></div><div class="rr"><span>巴基斯坦</span><span class="rv">38</span></div><div class="rr"><span>保加利亚</span><span class="rv">36</span></div><div class="rr"><span>加拿大</span><span class="rv">27</span></div><div class="rr"><span>乌克兰</span><span class="rv">11</span></div><div class="rr"><span>南非</span><span class="rv">8</span></div></div>
-<div class="li"><h3>🔑 弱口令 TOP 10</h3><div class="rr"><span class="warn" title="123456">123456</span><span class="rv">2987</span></div><div class="rr"><span class="warn" title="123">123</span><span class="rv">167</span></div><div class="rr"><span class="warn" title="111111">111111</span><span class="rv">144</span></div><div class="rr"><span class="warn" title="1">1</span><span class="rv">84</span></div><div class="rr"><span class="warn" title="12345678">12345678</span><span class="rv">61</span></div><div class="rr"><span class="warn" title="22&%DJO*8Ph@1Zlfy...">22&%DJO*8Ph@1Zlfy...</span><span class="rv">61</span></div><div class="rr"><span class="warn" title="Wf5Ic*ZgYK2%K47Xf...">Wf5Ic*ZgYK2%K47Xf...</span><span class="rv">58</span></div><div class="rr"><span class="warn" title="admin">admin</span><span class="rv">55</span></div><div class="rr"><span class="warn" title="root">root</span><span class="rv">55</span></div><div class="rr"><span class="warn" title="22&%DJO*8Ph@1Zlfy...">22&%DJO*8Ph@1Zlfy...</span><span class="rv">51</span></div></div>
-<div class="li"><h3>👤 用户名 TOP 5</h3><div class="rr"><span>root</span><span class="rv">17208</span></div><div class="rr"><span>test</span><span class="rv">201</span></div><div class="rr"><span>user</span><span class="rv">196</span></div><div class="rr"><span>dell</span><span class="rv">182</span></div><div class="rr"><span>ubuntu</span><span class="rv">181</span></div></div>
-<div class="li"><h3>🔌 端口 TOP 10</h3><div class="rr"><span>端口 2222</span><span class="rv">4539</span></div><div class="rr"><span>端口 23</span><span class="rv">330</span></div><div class="rr"><span>端口 3306</span><span class="rv">50</span></div><div class="rr"><span>端口 6379</span><span class="rv">44</span></div><div class="rr"><span>端口 9200</span><span class="rv">29</span></div><div class="rr"><span>端口 21</span><span class="rv">8</span></div></div>
-</div></div>
-<div class="section"><h2 class="st">📋 最新攻击记录</h2><div style="overflow-x:auto;max-height:380px;overflow-y:auto">
-<table><thead><tr><th>IP</th><th>位置</th><th>服务</th><th>端口</th><th>时间</th></tr></thead><tbody>
-<tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">60.29.174.122</span></td><td>中国-天津</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 07:21</td></tr><tr><td><span class="badge">64.62.156.94</span></td><td>美国</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 08:31</td></tr><tr><td><span class="badge">64.62.156.104</span></td><td>美国</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 08:31</td></tr><tr><td><span class="badge">64.62.156.101</span></td><td>美国</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 08:32</td></tr><tr><td><span class="badge">46.50.13.12</span></td><td>葡萄牙</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 08:32</td></tr><tr><td><span class="badge">209.50.245.249</span></td><td>美国</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 08:32</td></tr><tr><td><span class="badge">209.50.245.249</span></td><td>美国</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 08:32</td></tr><tr><td><span class="badge">209.50.245.249</span></td><td>美国</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 08:32</td></tr><tr><td><span class="badge">115.229.173.159</span></td><td>中国-浙江-嘉兴</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 08:42</td></tr><tr><td><span class="badge">49.88.156.34</span></td><td>中国-江苏-连云港</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 08:44</td></tr><tr><td><span class="badge">113.211.96.166</span></td><td>马来西亚</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 08:46</td></tr><tr><td><span class="badge">49.88.156.34</span></td><td>中国-江苏-连云港</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 08:52</td></tr><tr><td><span class="badge">130.12.180.174</span></td><td>加拿大</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 08:53</td></tr><tr><td><span class="badge">34.53.215.162</span></td><td>美国</td><td>FTP蜜罐</td><td>21</td><td>2026-04-29 09:04</td></tr><tr><td><span class="badge">165.154.20.30</span></td><td>加拿大</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 09:07</td></tr><tr><td><span class="badge">77.101.42.167</span></td><td>英国</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:16</td></tr><tr><td><span class="badge">49.88.156.34</span></td><td>中国-江苏-连云港</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:16</td></tr><tr><td><span class="badge">42.107.248.184</span></td><td>印度</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:20</td></tr><tr><td><span class="badge">130.12.180.174</span></td><td>加拿大</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:24</td></tr><tr><td><span class="badge">102.135.170.60</span></td><td>肯尼亚</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:32</td></tr><tr><td><span class="badge">102.135.170.60</span></td><td>肯尼亚</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:34</td></tr><tr><td><span class="badge">103.39.109.165</span></td><td>中国-香港</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 09:35</td></tr><tr><td><span class="badge">103.39.109.165</span></td><td>中国-香港</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 09:36</td></tr><tr><td><span class="badge">103.39.109.165</span></td><td>中国-香港</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 09:36</td></tr><tr><td><span class="badge">103.39.109.165</span></td><td>中国-香港</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 09:37</td></tr><tr><td><span class="badge">103.39.109.165</span></td><td>中国-香港</td><td>SSH蜜罐</td><td>2222</td><td>2026-04-29 09:38</td></tr><tr><td><span class="badge">183.149.199.79</span></td><td>中国-浙江-台州</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:54</td></tr><tr><td><span class="badge">3.131.220.121</span></td><td>美国</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 09:56</td></tr><tr><td><span class="badge">181.35.210.27</span></td><td>委内瑞拉</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:00</td></tr><tr><td><span class="badge">3.131.220.121</span></td><td>美国</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:00</td></tr><tr><td><span class="badge">119.84.143.161</span></td><td>中国-重庆</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:02</td></tr><tr><td><span class="badge">152.32.186.194</span></td><td>中国-香港</td><td>Elasticsearch蜜罐</td><td>9200</td><td>2026-04-29 10:03</td></tr><tr><td><span class="badge">47.114.173.120</span></td><td>中国</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:19</td></tr><tr><td><span class="badge">130.12.180.174</span></td><td>加拿大</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:26</td></tr><tr><td><span class="badge">85.217.149.59</span></td><td>保加利亚</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:34</td></tr><tr><td><span class="badge">152.56.177.134</span></td><td>印度</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:37</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">109.244.159.27</span></td><td>中国-上海</td><td>REDIS蜜罐</td><td>6379</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">85.217.149.1</span></td><td>保加利亚</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:39</td></tr><tr><td><span class="badge">85.217.140.11</span></td><td>保加利亚</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:43</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:52</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:52</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:52</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:52</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:53</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:53</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:53</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:53</td></tr><tr><td><span class="badge">89.43.132.226</span></td><td>匈牙利</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:54</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:54</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:54</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:54</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:54</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:54</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:55</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:55</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:55</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:55</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:56</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:56</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:56</td></tr><tr><td><span class="badge">144.48.130.3</span></td><td>巴基斯坦</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 10:56</td></tr><tr><td><span class="badge">106.192.117.244</span></td><td>印度</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:04</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:05</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:06</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:06</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:06</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:06</td></tr><tr><td><span class="badge">35.240.31.83</span></td><td>比利时</td><td>Telnet蜜罐</td><td>23</td><td>2026-04-29 11:06</td></tr>
-</tbody></table></div></div>
-<div class="footer"><p>🤖 HFish自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-07 14:38:08</p></div>
-</div>
-<script>
-new Chart(document.getElementById('tc'),{type:'line',data:{labels:{"dates": ["04-29", "04-30"], "counts": [1455, 3545]}.dates,datasets:[{label:'攻击次数',data:{"dates": ["04-29", "04-30"], "counts": [1455, 3545]}.counts,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.08)',fill:true,tension:.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
-new Chart(document.getElementById('hc'),{type:'bar',data:{labels:'0~23时'.split('~').flatMap((x,i)=>i+'时'),datasets:[{label:'攻击次数',data:[633, 2094, 818, 0, 0, 0, 0, 16, 12, 15, 41, 106, 25, 9, 46, 87, 107, 125, 125, 141, 123, 184, 122, 171],backgroundColor:function(c){var v=c.raw;return v>200?'#7c3aed':v>100?'#00d4ff':v>50?'#0284c7':'#0d47a1'},borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
-(function(){
-var dom=document.getElementById('wm');
-if(!dom) return;
-var mc=echarts.init(dom);
-fetch('country_data.json').then(function(r){return r.json()}).then(function(data){
-mc.setOption({
-tooltip:{trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>攻击: '+(p.value||0)+' 次'}},
-visualMap:{min:0,max:data.maxCount||100,text:['高','低'],realtime:false,calculable:true,inRange:{color:['#1a1a3e','#0d47a1','#1565c0','#00d4ff']},textStyle:{color:'#94a3b8'}},
-series:[{type:'map',map:'world',roam:true,emphasis:{label:{show:true,color:'#fff'},itemStyle:{areaColor:'#00d4ff'}},itemStyle:{borderColor:'rgba(255,255,255,0.15)',areaColor:'#1a1a3e'},data:data.countries||[]}]
-});
-}).catch(function(){
-mc.setOption({series:[{type:'map',map:'world',roam:true,itemStyle:{borderColor:'rgba(255,255,255,0.15)',areaColor:'#1a1a3e'},data:[]}]});
-});
-window.addEventListener('resize',function(){mc.resize();});
-})();
-</script></body></html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFish 威胁情报监控中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --secondary: #7c3aed;
+            --bg-dark: #0a0a14;
+            --bg-card: rgba(255,255,255,0.03);
+            --border: rgba(0,212,255,0.12);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0a0a14 0%, #0f172a 40%, #1e1b4b 70%, #0a0a14 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* 头部样式 */
+        .header {
+            text-align: center;
+            padding: 35px 20px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(124,58,237,0.06));
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,212,255,0.08);
+        }
+
+        .header h1 {
+            font-size: clamp(1.6em, 5vw, 2.8em);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0,212,255,0.3);
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px rgba(0,212,255,0.15);
+        }
+
+        .stat-number {
+            font-size: clamp(1.8em, 4vw, 2.5em);
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(0,212,255,0.4);
+            margin-bottom: 6px;
+        }
+
+        .stat-number.up { color: #4ade80; text-shadow: 0 0 20px rgba(74,222,128,0.4); }
+        .stat-number.down { color: #f87171; text-shadow: 0 0 20px rgba(248,113,113,0.4); }
+        .stat-label { color: var(--text-muted); font-size: 0.85em; letter-spacing: 0.5px; }
+
+        /* 区块样式 */
+        .section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: rgba(0,212,255,0.25);
+            box-shadow: 0 8px 30px rgba(0,212,255,0.1);
+        }
+
+        .section-title {
+            font-size: 1.35em;
+            color: var(--primary);
+            margin-bottom: 22px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 0 15px rgba(0,212,255,0.3);
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 550px;
+            border-radius: 16px;
+            background: rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .heatmap-container {
+            width: 100%;
+            height: 320px;
+        }
+
+        /* 蜜罐网格 */
+        .honeypot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .hp-item {
+            background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(124,58,237,0.04));
+            border: 1px solid rgba(0,212,255,0.12);
+            border-radius: 16px;
+            padding: 20px 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hp-item::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hp-item:hover::after {
+            opacity: 1;
+        }
+
+        .hp-item:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0,212,255,0.15);
+        }
+
+        .hp-name {
+            color: var(--text-muted);
+            font-size: 0.78em;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .hp-count {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 15px rgba(0,212,255,0.4);
+        }
+
+        .hp-zero { color: #475569; }
+
+        /* 列表项 */
+        .top-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .list-item {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,212,255,0.08);
+            border-radius: 16px;
+            padding: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            border-color: rgba(0,212,255,0.2);
+            box-shadow: 0 8px 25px rgba(0,212,255,0.1);
+        }
+
+        .list-item h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.88em;
+            transition: all 0.2s ease;
+        }
+
+        .rank-item:hover {
+            background: rgba(0,212,255,0.05);
+            padding-left: 8px;
+            border-radius: 8px;
+        }
+
+        .rank-value {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1em;
+        }
+
+        /* 表格 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85em;
+        }
+
+        .data-table th {
+            background: rgba(0,212,255,0.12);
+            color: var(--primary);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 11px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(0,212,255,0.04);
+        }
+
+        /* 徽章 */
+        .badge {
+            background: rgba(0,212,255,0.15);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            border: 1px solid rgba(0,212,255,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .badge:hover {
+            background: rgba(0,212,255,0.25);
+            box-shadow: 0 0 15px rgba(0,212,255,0.3);
+        }
+
+        /* 对比区块 */
+        .compare-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .compare-card {
+            background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(124,58,237,0.06));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .compare-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+
+        .compare-value {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(0,212,255,0.3);
+        }
+
+        .compare-label {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .compare-change {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .compare-change.up { color: #f87171; }
+        .compare-change.down { color: #4ade80; }
+
+        .trend-icon {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        /* 警告样式 */
+        .warning { color: #f87171; }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            color: #64748b;
+            margin-top: 40px;
+            font-size: 0.85em;
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .stat-card { padding: 15px 8px; }
+            .stat-number { font-size: 1.5em; }
+            .chart-container { height: 300px; }
+            .map-container { height: 400px; }
+            .heatmap-container { height: 250px; }
+            .top-list { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 1.4em; }
+            .section { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🛡️ HFish 威胁情报监控中心</h1>
+            <p class="subtitle">📊 监控周期: 2026-02-06 14:54 ~ 2026-05-07 14:54 | 最后更新: 2026-05-07 14:54:31</p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">5000</div>
+                <div class="stat-label">总攻击次数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">139</div>
+                <div class="stat-label">独立攻击IP</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">27638</div>
+                <div class="stat-label">账号资产数据</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">活跃蜜罐数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5000</div>
+                <div class="stat-label">本周攻击</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number ">
+                    5000+
+                </div>
+                <div class="stat-label">较上周无对比数据</div>
+            </div>
+        </div>
+
+        <!-- 攻击趋势图 -->
+        <div class="section">
+            <h2 class="section-title">📈 攻击趋势分析（近7天）</h2>
+            <div class="chart-container">
+                <canvas id="attackTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 攻击时段分布 -->
+        <div class="section">
+            <h2 class="section-title">🔥 攻击时段热力图（24小时）</h2>
+            <div class="heatmap-container">
+                <canvas id="heatmapChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 周对比分析 -->
+        <div class="section">
+            <h2 class="section-title">📊 本周 vs 上周攻击对比</h2>
+            <div class="compare-section">
+                <div class="compare-card">
+                    <div class="trend-icon">📊</div>
+                    <div class="compare-value" style="color: var(--primary);">5000</div>
+                    <div class="compare-label">本周攻击次数</div>
+                </div>
+                <div class="compare-card">
+                    <div class="trend-icon">📉</div>
+                    <div class="compare-value" style="color: var(--text-muted);">0</div>
+                    <div class="compare-label">上周攻击次数</div>
+                </div>
+                <div class="compare-card">
+                    <div class="trend-icon">➡️</div>
+                    <div class="compare-value ">
+                        5000+
+                    </div>
+                    <div class="compare-label">数量变化</div>
+                    
+                </div>
+            </div>
+            <!-- 周对比图表 -->
+            <div class="chart-container" style="height: 300px; margin-top: 20px;">
+                <canvas id="weekCompareChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 世界地图 -->
+        <div class="section">
+            <h2 class="section-title">🗺️ 攻击来源全球分布</h2>
+            <div class="map-container" id="worldMap"></div>
+        </div>
+
+        <!-- 蜜罐统计 -->
+        <div class="section">
+            <h2 class="section-title">🎯 各蜜罐受攻击次数</h2>
+            <div class="honeypot-grid">
+                
+                <div class="hp-item">
+                    <div class="hp-name">SSH蜜罐</div>
+                    <div class="hp-count ">4539</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">FTP蜜罐</div>
+                    <div class="hp-count ">8</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">Telnet蜜罐</div>
+                    <div class="hp-count ">330</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">HTTP代理蜜罐</div>
+                    <div class="hp-count hp-zero">0</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">MYSQL蜜罐</div>
+                    <div class="hp-count ">50</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">REDIS蜜罐</div>
+                    <div class="hp-count ">44</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">Elasticsearch蜜罐</div>
+                    <div class="hp-count ">29</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">CUSTOM蜜罐</div>
+                    <div class="hp-count hp-zero">0</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">TCP端口监听</div>
+                    <div class="hp-count hp-zero">0</div>
+                </div>
+                
+                <div class="hp-item">
+                    <div class="hp-name">Nginx蜜罐</div>
+                    <div class="hp-count hp-zero">0</div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- 攻击统计分析 -->
+        <div class="section">
+            <h2 class="section-title">📊 攻击统计详情</h2>
+            <div class="top-list">
+                <div class="list-item">
+                    <h3>🔝 Top 10 攻击源IP</h3>
+                    
+                    <div class="rank-item"><span title="93.188.83.96">93.188.83.96</span><span class="rank-value">3163次</span></div>
+                    
+                    <div class="rank-item"><span title="45.148.10.173">45.148.10.173</span><span class="rank-value">1149次</span></div>
+                    
+                    <div class="rank-item"><span title="161.35.123.102">161.35.123.102</span><span class="rank-value">119次</span></div>
+                    
+                    <div class="rank-item"><span title="125.67.61.66">125.67.61.66</span><span class="rank-value">84次</span></div>
+                    
+                    <div class="rank-item"><span title="112.124.57.236">112.124.57.236</span><span class="rank-value">64次</span></div>
+                    
+                    <div class="rank-item"><span title="45.153.34.108">45.153.34.108</span><span class="rank-value">38次</span></div>
+                    
+                    <div class="rank-item"><span title="35.240.31.83">35.240.31.83</span><span class="rank-value">32次</span></div>
+                    
+                    <div class="rank-item"><span title="34.140.176.231">34.140.176.231</span><span class="rank-value">32次</span></div>
+                    
+                    <div class="rank-item"><span title="34.79.123.86">34.79.123.86</span><span class="rank-value">32次</span></div>
+                    
+                    <div class="rank-item"><span title="85.11.167.2">85.11.167.2</span><span class="rank-value">30次</span></div>
+                    
+                </div>
+                <div class="list-item">
+                    <h3>🌍 攻击来源国家</h3>
+                    
+                    <div class="rank-item"><span>俄罗斯</span><span class="rank-value">3168次</span></div>
+                    
+                    <div class="rank-item"><span>欧洲地区</span><span class="rank-value">1187次</span></div>
+                    
+                    <div class="rank-item"><span>中国</span><span class="rank-value">209次</span></div>
+                    
+                    <div class="rank-item"><span>美国</span><span class="rank-value">197次</span></div>
+                    
+                    <div class="rank-item"><span>比利时</span><span class="rank-value">67次</span></div>
+                    
+                    <div class="rank-item"><span>巴基斯坦</span><span class="rank-value">38次</span></div>
+                    
+                    <div class="rank-item"><span>保加利亚</span><span class="rank-value">36次</span></div>
+                    
+                    <div class="rank-item"><span>加拿大</span><span class="rank-value">27次</span></div>
+                    
+                    <div class="rank-item"><span>乌克兰</span><span class="rank-value">11次</span></div>
+                    
+                    <div class="rank-item"><span>南非</span><span class="rank-value">8次</span></div>
+                    
+                </div>
+                <div class="list-item">
+                    <h3>🔑 弱口令 TOP 10</h3>
+                    
+                    <div class="rank-item"><span class="warning">123456</span><span class="rank-value">2993次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">123</span><span class="rank-value">170次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">111111</span><span class="rank-value">144次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">1</span><span class="rank-value">85次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">12345678</span><span class="rank-value">61次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">22&%DJO*8Ph@1ZlfyaT^Y8#Iw&Od0B&W123</span><span class="rank-value">61次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">Wf5Ic*ZgYK2%K47XfNU&GJp4KHfLAn6m</span><span class="rank-value">58次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">admin</span><span class="rank-value">55次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">root</span><span class="rank-value">55次</span></div>
+                    
+                    <div class="rank-item"><span class="warning">Drag1823hcacatcuciocolata</span><span class="rank-value">51次</span></div>
+                    
+                </div>
+                <div class="list-item">
+                    <h3>👤 高频用户名 TOP 5</h3>
+                    
+                    <div class="rank-item"><span>root</span><span class="rank-value">17232次</span></div>
+                    
+                    <div class="rank-item"><span>test</span><span class="rank-value">201次</span></div>
+                    
+                    <div class="rank-item"><span>user</span><span class="rank-value">196次</span></div>
+                    
+                    <div class="rank-item"><span>dell</span><span class="rank-value">183次</span></div>
+                    
+                    <div class="rank-item"><span>ubuntu</span><span class="rank-value">181次</span></div>
+                    
+                </div>
+                <div class="list-item">
+                    <h3>🔌 热门攻击端口</h3>
+                    
+                    <div class="rank-item"><span>端口 2222</span><span class="rank-value">4539次</span></div>
+                    
+                    <div class="rank-item"><span>端口 23</span><span class="rank-value">330次</span></div>
+                    
+                    <div class="rank-item"><span>端口 3306</span><span class="rank-value">50次</span></div>
+                    
+                    <div class="rank-item"><span>端口 6379</span><span class="rank-value">44次</span></div>
+                    
+                    <div class="rank-item"><span>端口 9200</span><span class="rank-value">29次</span></div>
+                    
+                    <div class="rank-item"><span>端口 21</span><span class="rank-value">8次</span></div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- 攻击记录表格 -->
+        <div class="section">
+            <h2 class="section-title">📋 最新攻击详情记录（前100条）</h2>
+            <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>攻击源IP</th><th>地理位置</th><th>服务类型</th><th>端口</th><th>攻击时间</th></tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">60.29.174.122</span></td>
+                            <td>中国-天津</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 07:21</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">64.62.156.94</span></td>
+                            <td>美国</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 08:31</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">64.62.156.104</span></td>
+                            <td>美国</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 08:31</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">64.62.156.101</span></td>
+                            <td>美国</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 08:32</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">46.50.13.12</span></td>
+                            <td>葡萄牙</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 08:32</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">209.50.245.249</span></td>
+                            <td>美国</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 08:32</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">209.50.245.249</span></td>
+                            <td>美国</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 08:32</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">209.50.245.249</span></td>
+                            <td>美国</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 08:32</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">115.229.173.159</span></td>
+                            <td>中国-浙江-嘉兴</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 08:42</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">49.88.156.34</span></td>
+                            <td>中国-江苏-连云港</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 08:44</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">113.211.96.166</span></td>
+                            <td>马来西亚</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 08:46</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">49.88.156.34</span></td>
+                            <td>中国-江苏-连云港</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 08:52</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">130.12.180.174</span></td>
+                            <td>加拿大</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 08:53</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">34.53.215.162</span></td>
+                            <td>美国</td>
+                            <td>FTP蜜罐</td>
+                            <td>21</td>
+                            <td>2026-04-29 09:04</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">165.154.20.30</span></td>
+                            <td>加拿大</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 09:07</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">77.101.42.167</span></td>
+                            <td>英国</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:16</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">49.88.156.34</span></td>
+                            <td>中国-江苏-连云港</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:16</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">42.107.248.184</span></td>
+                            <td>印度</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:20</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">130.12.180.174</span></td>
+                            <td>加拿大</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:24</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">102.135.170.60</span></td>
+                            <td>肯尼亚</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:32</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">102.135.170.60</span></td>
+                            <td>肯尼亚</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:34</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">103.39.109.165</span></td>
+                            <td>中国-香港</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 09:35</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">103.39.109.165</span></td>
+                            <td>中国-香港</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 09:36</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">103.39.109.165</span></td>
+                            <td>中国-香港</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 09:36</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">103.39.109.165</span></td>
+                            <td>中国-香港</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 09:37</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">103.39.109.165</span></td>
+                            <td>中国-香港</td>
+                            <td>SSH蜜罐</td>
+                            <td>2222</td>
+                            <td>2026-04-29 09:38</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">183.149.199.79</span></td>
+                            <td>中国-浙江-台州</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">3.131.220.121</span></td>
+                            <td>美国</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 09:56</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">181.35.210.27</span></td>
+                            <td>委内瑞拉</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:00</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">3.131.220.121</span></td>
+                            <td>美国</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:00</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">119.84.143.161</span></td>
+                            <td>中国-重庆</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:02</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">152.32.186.194</span></td>
+                            <td>中国-香港</td>
+                            <td>Elasticsearch蜜罐</td>
+                            <td>9200</td>
+                            <td>2026-04-29 10:03</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">47.114.173.120</span></td>
+                            <td>中国</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:19</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">130.12.180.174</span></td>
+                            <td>加拿大</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:26</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">85.217.149.59</span></td>
+                            <td>保加利亚</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:34</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">152.56.177.134</span></td>
+                            <td>印度</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:37</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">109.244.159.27</span></td>
+                            <td>中国-上海</td>
+                            <td>REDIS蜜罐</td>
+                            <td>6379</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">85.217.149.1</span></td>
+                            <td>保加利亚</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:39</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">85.217.140.11</span></td>
+                            <td>保加利亚</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:43</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:52</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:52</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:52</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:52</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:53</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:53</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:53</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:53</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">89.43.132.226</span></td>
+                            <td>匈牙利</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:54</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:55</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:55</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:55</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:55</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:56</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:56</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:56</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">144.48.130.3</span></td>
+                            <td>巴基斯坦</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 10:56</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">106.192.117.244</span></td>
+                            <td>印度</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:04</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:05</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:06</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:06</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:06</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:06</td>
+                        </tr>
+                        
+                        <tr>
+                            <td><span class="badge">35.240.31.83</span></td>
+                            <td>比利时</td>
+                            <td>Telnet蜜罐</td>
+                            <td>23</td>
+                            <td>2026-04-29 11:06</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-07 14:54:31</p>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 攻击趋势图（双折线对比）---
+        const trendCtx = document.getElementById('attackTrendChart').getContext('2d');
+        const trendData = {"dates": ["04-29", "04-30"], "counts": [1455, 3545], "prev_counts": []};
+        
+        const gradient = trendCtx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(0, 212, 255, 0.3)');
+        gradient.addColorStop(1, 'rgba(0, 212, 255, 0)');
+        
+        const prevGradient = trendCtx.createLinearGradient(0, 0, 0, 400);
+        prevGradient.addColorStop(0, 'rgba(124, 58, 237, 0.2)');
+        prevGradient.addColorStop(1, 'rgba(124, 58, 237, 0)');
+
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendData.dates || [],
+                datasets: [
+                    {
+                        label: '本周攻击',
+                        data: trendData.counts || [],
+                        borderColor: '#00d4ff',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#00d4ff',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 9,
+                        pointHoverBackgroundColor: '#00d4ff',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 3
+                    },
+                    {
+                        label: '上周攻击',
+                        data: trendData.prev_counts || [],
+                        borderColor: '#7c3aed',
+                        backgroundColor: prevGradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderDash: [5, 5],
+                        pointBackgroundColor: '#7c3aed',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { size: 13 },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#00d4ff',
+                        bodyColor: '#e2e8f0',
+                        borderColor: 'rgba(0, 212, 255, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw} 次攻击`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { size: 12 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8', font: { size: 12 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        beginAtZero: true,
+                        suggestedMin: 0
+                    }
+                },
+                animation: {
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // --- 2. 攻击时段热力图 ---
+        const heatCtx = document.getElementById('heatmapChart').getContext('2d');
+        const heatData = [633, 2094, 818, 0, 0, 0, 0, 16, 12, 15, 41, 106, 25, 9, 46, 87, 107, 125, 125, 141, 123, 184, 122, 171];
+        
+        const barColors = heatData.map(val => {
+            if (val > 200) return '#7c3aed';
+            if (val > 100) return '#00d4ff';
+            if (val > 50) return '#0284c7';
+            if (val > 20) return '#0d47a1';
+            return '#1e293b';
+        });
+
+        new Chart(heatCtx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                datasets: [{
+                    label: '攻击次数',
+                    data: heatData,
+                    backgroundColor: barColors,
+                    borderColor: barColors.map(c => c),
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#00d4ff',
+                        bodyColor: '#e2e8f0',
+                        borderColor: 'rgba(0, 212, 255, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return `攻击次数: ${context.raw} 次`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { 
+                            color: '#94a3b8', 
+                            font: { size: 11 },
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8', font: { size: 12 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        beginAtZero: true
+                    }
+                },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // --- 3. 周对比柱状图 ---
+        const compareCtx = document.getElementById('weekCompareChart').getContext('2d');
+        const compareData = {
+            labels: ['本周', '上周'],
+            datasets: [{
+                label: '攻击次数',
+                data: [5000, 0],
+                backgroundColor: ['#00d4ff', '#7c3aed'],
+                borderColor: ['#00d4ff', '#7c3aed'],
+                borderWidth: 2,
+                borderRadius: 12,
+                barThickness: 60
+            }]
+        };
+
+        new Chart(compareCtx, {
+            type: 'bar',
+            data: compareData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#00d4ff',
+                        bodyColor: '#e2e8f0',
+                        borderColor: 'rgba(0, 212, 255, 0.3)',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { size: 14, weight: '600' } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8', font: { size: 12 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        beginAtZero: true
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // --- 4. 世界地图（ECharts）---
+        const mapDom = document.getElementById('worldMap');
+        const mapChart = echarts.init(mapDom);
+
+        const countryNameMap = {
+            "China": "中国", "United States": "美国", "Russia": "俄罗斯", "Canada": "加拿大",
+            "Brazil": "巴西", "Australia": "澳大利亚", "India": "印度", "Japan": "日本",
+            "Germany": "德国", "United Kingdom": "英国", "France": "法国", "Italy": "意大利",
+            "South Korea": "韩国", "Singapore": "新加坡", "Malaysia": "马来西亚", "Indonesia": "印度尼西亚",
+            "Thailand": "泰国", "Vietnam": "越南", "Turkey": "土耳其", "Iran": "伊朗",
+            "Netherlands": "荷兰", "Sweden": "瑞典", "Switzerland": "瑞士", "Spain": "西班牙",
+            "Ukraine": "乌克兰", "Poland": "波兰", "Mexico": "墨西哥", "Nigeria": "尼日利亚",
+            "Egypt": "埃及", "South Africa": "南非", "Argentina": "阿根廷", "Chile": "智利",
+            "Saudi Arabia": "沙特阿拉伯", "United Arab Emirates": "阿联酋", "Israel": "以色列",
+            "Pakistan": "巴基斯坦", "Bangladesh": "孟加拉", "Philippines": "菲律宾", "New Zealand": "新西兰",
+            "Norway": "挪威", "Denmark": "丹麦", "Finland": "芬兰", "Ireland": "爱尔兰",
+            "Portugal": "葡萄牙", "Greece": "希腊", "Austria": "奥地利", "Hungary": "匈牙利"
+        };
+
+        // 直接使用内嵌数据
+        const mapData = {"countries": [{"name": "Russia", "value": 3168}, {"name": "Russia", "value": 1187}, {"name": "China", "value": 209}, {"name": "United States", "value": 197}, {"name": "Belgium", "value": 67}, {"name": "Pakistan", "value": 38}, {"name": "Bulgaria", "value": 36}, {"name": "Canada", "value": 27}, {"name": "Ukraine", "value": 11}, {"name": "South Africa", "value": 8}, {"name": "India", "value": 6}, {"name": "China", "value": 5}, {"name": "Malaysia", "value": 4}, {"name": "South Korea", "value": 4}, {"name": "Kenya", "value": 2}, {"name": "Philippines", "value": 2}, {"name": "Ethiopia", "value": 2}, {"name": "France", "value": 2}, {"name": "Japan", "value": 2}, {"name": "South Africa", "value": 2}, {"name": "Brazil", "value": 2}, {"name": "Nicaragua", "value": 2}, {"name": "Portugal", "value": 1}, {"name": "United Kingdom", "value": 1}, {"name": "Venezuela", "value": 1}, {"name": "Hungary", "value": 1}, {"name": "Italy", "value": 1}, {"name": "Trinidad and Tobago", "value": 1}, {"name": "Kazakhstan", "value": 1}, {"name": "Netherlands", "value": 1}, {"name": "Germany", "value": 1}, {"name": "Uzbekistan", "value": 1}, {"name": "Bolivia", "value": 1}, {"name": "Sweden", "value": 1}, {"name": "Iraq", "value": 1}, {"name": "Paraguay", "value": 1}, {"name": "Argentina", "value": 1}, {"name": "El Salvador", "value": 1}, {"name": "Bangladesh", "value": 1}], "maxCount": 3168};
+
+        const mapOption = {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                borderColor: 'rgba(0, 212, 255, 0.3)',
+                borderWidth: 1,
+                padding: [12, 16],
+                textStyle: { color: '#e2e8f0', fontSize: 14 },
+                formatter: function(params) {
+                    const countryName = countryNameMap[params.name] || params.name;
+                    return `<div style="font-weight:600;margin-bottom:4px;">${countryName}</div>
+                            <div>攻击次数: <span style="color:#00d4ff;font-weight:600;">${params.value || 0}</span> 次</div>`;
+                }
+            },
+            visualMap: {
+                show: true,
+                left: '5%',
+                bottom: '8%',
+                min: 0,
+                max: mapData.maxCount || 100,
+                text: ['高', '低'],
+                textStyle: { color: '#94a3b8', fontSize: 12 },
+                inRange: {
+                    color: ['#1e293b', '#0d47a1', '#1565c0', '#0284c7', '#00d4ff']
+                },
+                calculable: true,
+                itemWidth: 15,
+                itemHeight: 120
+            },
+            series: [{
+                name: '攻击分布',
+                type: 'map',
+                map: 'world',
+                roam: true,
+                zoom: 1.2,
+                center: [10, 20],
+                itemStyle: {
+                    borderColor: 'rgba(255, 255, 255, 0.15)',
+                    borderWidth: 1.5,
+                    areaColor: '#1e293b'
+                },
+                emphasis: {
+                    itemStyle: {
+                        areaColor: '#00d4ff',
+                        borderColor: '#00d4ff',
+                        borderWidth: 2,
+                        shadowBlur: 20,
+                        shadowColor: 'rgba(0, 212, 255, 0.5)'
+                    },
+                    label: {
+                        show: true,
+                        color: '#fff',
+                        fontSize: 12,
+                        fontWeight: '600'
+                    }
+                },
+                label: {
+                    show: false,
+                    color: '#94a3b8',
+                    fontSize: 10
+                },
+                data: mapData.countries || []
+            }]
+        };
+
+        // 动态加载世界地图数据
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/map/js/world.js';
+            script.onload = function() {
+                mapChart.setOption(mapOption);
+            };
+            script.onerror = function() {
+                // 如果地图数据加载失败，显示简化视图
+                mapDom.innerHTML = `
+                    <div style="color:#94a3b8;text-align:center;padding-top:180px;">
+                        <div style="font-size:3em;margin-bottom:15px;">🗺️</div>
+                        <div style="font-size:16px;">地图数据加载中...</div>
+                        <div style="font-size:14px;margin-top:10px;color:#64748b;">攻击来源分布: ${mapData.countries.length} 个国家</div>
+                    </div>
+                `;
+            };
+            document.head.appendChild(script);
+        })();
+
+        // 响应式调整
+        window.addEventListener('resize', function() {
+            mapChart.resize();
+        });
+    </script>
+</body>
+</html>
+    
