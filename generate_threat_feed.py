@@ -30,29 +30,37 @@ LOOKBACK_DAYS = 90
 PAGE_SIZE = 5000
 
 # ==================== 数据采集 ====================
-def _fetch_paginated(url, body, page_size=PAGE_SIZE):
-    """通用分页拉取，循环直到返回量不足一页"""
+def _fetch_paginated(url, body_base, page_size=PAGE_SIZE, max_pages=20):
+    """通用分页拉取，循环直到返回量不足一页或达到最大页数"""
     all_data = []
-    page = 1
-    while True:
+    seen = set()
+    for page in range(1, max_pages + 1):
+        body = dict(body_base)
         body["page"] = page
         body["page_size"] = page_size
         try:
             r = requests.post(url, headers={"Content-Type": "application/json"},
                               params={"api_key": API_KEY}, json=body,
                               verify=False, timeout=30)
-            if r.json().get("response_code") == 0:
-                data = r.json().get("data", [])
-                if not data:
-                    break
-                all_data.extend(data)
-                if len(data) < page_size:
-                    break
-                page += 1
-            else:
+            resp = r.json()
+            if resp.get("response_code") != 0:
+                print(f"  ⚠ API返回非0状态码(第{page}页): {resp.get('response_code')}")
+                break
+            data = resp.get("data", [])
+            if not data:
+                break
+            new_batch = 0
+            for item in data:
+                key = item.get("id", item.get("attack_ip", "")) + str(item.get("create_time", ""))
+                if key not in seen:
+                    seen.add(key)
+                    all_data.append(item)
+                    new_batch += 1
+            print(f"  📄 第{page}页: {len(data)}条 | 新增(去重后): {new_batch}条 | 累计: {len(all_data)}条")
+            if len(data) < page_size:
                 break
         except Exception as e:
-            print(f"API请求失败(第{page}页): {e}")
+            print(f"  ❌ API请求失败(第{page}页): {e}")
             break
     return all_data
 
@@ -116,6 +124,7 @@ def process_data(raw_logs):
 def gen_chart_data(df):
     """生成近14天攻击趋势 + 周对比数据（统一数据源，单次分组计算）"""
     if "date" not in df.columns or df.empty:
+        print("⚠ gen_chart_data: df为空或无date列，返回空数据")
         return {
             "dates": [], "counts": [], "prev_counts": [],
             "this_week_total": 0, "prev_week_total": 0,
@@ -123,9 +132,19 @@ def gen_chart_data(df):
         }
 
     daily_counts = df.groupby("date")["attack_ip"].count()
-    recent_dates = sorted(daily_counts.index)[-14:]
+    if daily_counts.empty:
+        print("⚠ gen_chart_data: daily_counts为空，返回空数据")
+        return {
+            "dates": [], "counts": [], "prev_counts": [],
+            "this_week_total": 0, "prev_week_total": 0,
+            "change": 0, "change_percent": 0, "trend": "无数据"
+        }
 
+    all_dates = sorted(daily_counts.index)
+    recent_dates = all_dates[-14:]
     n = len(recent_dates)
+    print(f"📊 gen_chart_data: 总日期数={len(all_dates)}, 取最近{n}天, 总攻击数={len(df)}")
+
     if n >= 7:
         this_week_dates = recent_dates[-7:]
         last_week_dates = recent_dates[-min(n, 14):-7]
@@ -140,9 +159,14 @@ def gen_chart_data(df):
     this_week_counts = [int(daily_counts.get(d, 0)) for d in this_week_dates]
     last_week_counts = [int(daily_counts.get(d, 0)) for d in last_week_dates]
 
-    max_len = max(len(this_week_counts), len(last_week_counts))
-    this_week_counts += [0] * (max_len - len(this_week_counts))
-    last_week_counts += [0] * (max_len - len(last_week_counts))
+    print(f"  this_week_dates: {len(this_week_dates)}天, counts: {this_week_counts}")
+    print(f"  last_week_dates: {len(last_week_dates)}天, counts: {last_week_counts}")
+
+    max_len = max(len(this_week_counts), len(last_week_counts), 1)
+    while len(this_week_counts) < max_len:
+        this_week_counts.append(0)
+    while len(last_week_counts) < max_len:
+        last_week_counts.append(0)
 
     this_week_total = sum(this_week_counts)
     prev_week_total = sum(last_week_counts)
@@ -154,6 +178,8 @@ def gen_chart_data(df):
     else:
         change_percent = round((change / prev_week_total) * 100, 1)
         trend = "上升" if change > 0 else "下降" if change < 0 else "持平"
+
+    print(f"  结果: 近7天={this_week_total} / 前7天={prev_week_total} / 趋势={trend}")
 
     return {
         "dates": [d.strftime("%m-%d") for d in this_week_dates],
@@ -200,6 +226,8 @@ def generate_html(df, stats, accounts, map_data, time_range):
         "trend": chart_data["trend"],
     }
     chart_data_json = json.dumps(chart_data)
+    print(f"📈 chart_data JSON 长度: {len(chart_data_json)} 字符")
+    print(f"   dates数: {len(chart_data['dates'])} | counts和: {sum(chart_data['counts'])} | prev_counts和: {sum(chart_data['prev_counts'])}")
 
     heatmap_list = stats.get("heatmap_data", [0] * 24)
     heatmap_data = json.dumps([int(x) if hasattr(x, 'item') else x for x in heatmap_list])
@@ -807,6 +835,7 @@ def generate_html(df, stats, accounts, map_data, time_range):
 
     <script>
         // --- 1. 攻击趋势图（双折线对比）---
+        console.log('TrendData:', {{ chart_data | safe }});
         const trendCtx = document.getElementById('attackTrendChart').getContext('2d');
         const trendData = {{ chart_data | safe }};
         
@@ -1118,6 +1147,9 @@ def main():
         print(f"📥 攻击数据: {len(logs)} 条 | 账号数据: {len(accounts)} 条")
 
         df, stats = process_data(logs)
+        print(f"📊 处理后DataFrame: {len(df)}行, {len(df.columns)}列")
+        print(f"   总攻击: {stats['total_attacks']} | 独立IP: {stats['unique_ips']} | 活跃蜜罐: {stats['active_honeypots']}")
+
         map_data = generate_map_data(df)
 
         export_csv(df)
