@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 HFish 威胁情报自动化生成脚本 v7.1 (性能优化版)
