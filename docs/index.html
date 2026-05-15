@@ -9,39 +9,57 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         :root {
-            --primary: #00d4ff;
+            --primary: #2563eb;
             --secondary: #7c3aed;
-            --bg-dark: #0a0a14;
-            --bg-card: rgba(255,255,255,0.03);
-            --border: rgba(0,212,255,0.12);
-            --text: #e2e8f0;
-            --text-muted: #94a3b8;
+            --accent: #0891b2;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --bg: #f1f5f9;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
-            background:linear-gradient(135deg,#0a0a14 0%,#0f172a 40%,#1e1b4b 70%,#0a0a14 100%);
+            background: var(--bg);
             min-height:100vh; padding:20px; color:var(--text);
         }
         .container { max-width:1440px; margin:0 auto; }
         .header {
-            text-align:center; padding:35px 20px; margin-bottom:30px;
-            background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(124,58,237,0.06));
-            border-radius:24px; border:1px solid var(--border);
-            box-shadow:0 8px 32px rgba(0,212,255,0.08);
+            text-align:center; padding:40px 20px; margin-bottom:30px;
+            background: linear-gradient(135deg, #1e40af, #7c3aed);
+            border-radius:20px; color:#fff;
+            box-shadow: 0 8px 32px rgba(37,99,235,0.2);
+            position: relative; overflow: hidden;
+        }
+        .header::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 60%);
         }
         .header h1 {
             font-size:clamp(1.6em,5vw,2.8em);
-            background:linear-gradient(135deg,var(--primary),var(--secondary));
-            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-            text-shadow:0 0 30px rgba(0,212,255,0.3); margin-bottom:10px;
+            color:#fff; margin-bottom:10px; position:relative;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-        .header .subtitle { color:var(--text-muted); font-size:0.9em; letter-spacing:1px; }
+        .header .subtitle { color: rgba(255,255,255,0.8); font-size:0.9em; letter-spacing:1px; position:relative; }
+        .header .ai-badge {
+            display: inline-block; margin-top: 12px;
+            background: rgba(255,255,255,0.15); color: #fff;
+            padding: 4px 14px; border-radius: 20px; font-size: 0.75em;
+            backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);
+            position:relative;
+        }
         .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:18px; margin-bottom:30px; }
         .stat-card {
-            background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));
-            border:1px solid var(--border); border-radius:18px; padding:22px 15px;
-            text-align:center; position:relative; overflow:hidden; transition:all .3s ease;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius:16px; padding:22px 15px;
+            text-align:center; position:relative; overflow:hidden;
+            transition: all .3s ease; box-shadow: var(--shadow);
         }
         .stat-card::before {
             content:''; position:absolute; top:0; left:0; right:0; height:3px;
@@ -49,64 +67,65 @@
             transform:scaleX(0); transition:transform .3s ease;
         }
         .stat-card:hover::before { transform:scaleX(1); }
-        .stat-card:hover { transform:translateY(-5px); border-color:var(--primary); box-shadow:0 12px 40px rgba(0,212,255,0.15); }
-        .stat-number { font-size:clamp(1.8em,4vw,2.5em); font-weight:700; color:var(--primary); text-shadow:0 0 20px rgba(0,212,255,0.4); margin-bottom:6px; }
-        .stat-number.up { color:#4ade80; text-shadow:0 0 20px rgba(74,222,128,0.4); }
-        .stat-number.down { color:#f87171; text-shadow:0 0 20px rgba(248,113,113,0.4); }
-        .stat-label { color:var(--text-muted); font-size:0.85em; letter-spacing:0.5px; }
+        .stat-card:hover { transform:translateY(-4px); box-shadow:0 8px 30px rgba(37,99,235,0.12); }
+        .stat-number { font-size:clamp(1.8em,4vw,2.5em); font-weight:700; color:var(--primary); margin-bottom:6px; }
+        .stat-number.up { color:var(--success); }
+        .stat-number.down { color:var(--danger); }
+        .stat-label { color:var(--text-muted); font-size:0.85em; letter-spacing:0.5px; font-weight:500; }
         .section {
-            background:rgba(255,255,255,0.02); border:1px solid var(--border);
-            border-radius:20px; padding:28px; margin-bottom:25px; transition:all .3s ease;
+            background:var(--bg-card); border:1px solid var(--border);
+            border-radius:16px; padding:28px; margin-bottom:25px;
+            box-shadow:var(--shadow); transition:all .3s ease;
         }
-        .section:hover { border-color:rgba(0,212,255,0.25); box-shadow:0 8px 30px rgba(0,212,255,0.1); }
-        .section-title { font-size:1.35em; color:var(--primary); margin-bottom:22px; border-bottom:1px solid var(--border); padding-bottom:14px; display:flex; align-items:center; gap:12px; text-shadow:0 0 15px rgba(0,212,255,0.3); }
+        .section:hover { border-color:var(--primary); box-shadow:0 8px 30px rgba(37,99,235,0.1); }
+        .section-title { font-size:1.35em; color:var(--primary); margin-bottom:22px; border-bottom:2px solid var(--border); padding-bottom:14px; display:flex; align-items:center; gap:12px; font-weight:600; }
         .chart-container { width:100%; height:400px; position:relative; }
-        .map-container { width:100%; height:550px; border-radius:16px; background:rgba(0,0,0,0.3); overflow:hidden; }
+        .map-container { width:100%; height:550px; border-radius:16px; background:var(--bg); overflow:hidden; border:1px solid var(--border); }
         .heatmap-container { width:100%; height:320px; }
         .honeypot-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:15px; }
         .hp-item {
-            background:linear-gradient(135deg,rgba(0,212,255,0.06),rgba(124,58,237,0.04));
-            border:1px solid rgba(0,212,255,0.12); border-radius:16px; padding:20px 12px;
+            background:linear-gradient(135deg,rgba(37,99,235,0.04),rgba(124,58,237,0.03));
+            border:1px solid var(--border); border-radius:16px; padding:20px 12px;
             text-align:center; transition:all .3s ease; position:relative; overflow:hidden;
         }
         .hp-item::after {
             content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
-            background:radial-gradient(circle,rgba(0,212,255,0.1) 0%,transparent 70%);
+            background:radial-gradient(circle,rgba(37,99,235,0.06) 0%,transparent 70%);
             opacity:0; transition:opacity .3s ease;
         }
         .hp-item:hover::after { opacity:1; }
-        .hp-item:hover { transform:translateY(-4px); border-color:var(--primary); box-shadow:0 10px 30px rgba(0,212,255,0.15); }
+        .hp-item:hover { transform:translateY(-4px); border-color:var(--primary); box-shadow:0 8px 30px rgba(37,99,235,0.12); }
         .hp-name { color:var(--text-muted); font-size:0.78em; margin-bottom:10px; word-break:break-all; }
-        .hp-count { font-size:2em; font-weight:700; color:var(--primary); text-shadow:0 0 15px rgba(0,212,255,0.4); }
+        .hp-count { font-size:2em; font-weight:700; color:var(--primary); }
         .hp-zero { color:#475569; }
         .top-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; }
         .list-item {
-            background:rgba(0,0,0,0.35); border:1px solid rgba(0,212,255,0.08);
+            background:var(--bg-card); border:1px solid var(--border);
             border-radius:16px; padding:18px; transition:all .3s ease; overflow:hidden;
         }
-        .list-item:hover { border-color:rgba(0,212,255,0.2); box-shadow:0 8px 25px rgba(0,212,255,0.1); }
+        .list-item:hover { border-color:var(--primary); box-shadow:0 8px 30px rgba(37,99,235,0.1); }
         .list-item h3 { color:var(--primary); margin-bottom:15px; font-size:1.05em; display:flex; align-items:center; gap:8px; }
-        .rank-item { display:flex; justify-content:space-between; align-items:center; padding:10px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.88em; transition:all .2s ease; word-break:break-all; gap:10px; }
-        .rank-item:hover { background:rgba(0,212,255,0.05); border-radius:8px; }
+        .rank-item { display:flex; justify-content:space-between; align-items:center; padding:10px 8px; border-bottom:1px solid var(--border); font-size:0.88em; transition:all .2s ease; word-break:break-all; gap:10px; }
+        .rank-item:hover { background:rgba(37,99,235,0.04); border-radius:8px; }
         .rank-item span:first-child { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
         .rank-value { font-weight:700; color:var(--primary); font-size:1.1em; flex-shrink:0; white-space:nowrap; }
-        .warning { color:#f87171; font-family:monospace; word-break:break-all; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+        .warning { color:#dc2626; font-family:monospace; word-break:break-all; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
         .data-table { width:100%; border-collapse:collapse; margin-top:15px; font-size:0.85em; }
-        .data-table th { background:rgba(0,212,255,0.12); color:var(--primary); padding:12px 15px; text-align:left; font-weight:600; }
-        .data-table td { padding:11px 15px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .data-table tr:hover td { background:rgba(0,212,255,0.04); }
-        .badge { background:rgba(0,212,255,0.15); color:var(--primary); padding:4px 12px; border-radius:16px; font-size:0.8em; border:1px solid rgba(0,212,255,0.2); transition:all .2s ease; }
-        .badge:hover { background:rgba(0,212,255,0.25); box-shadow:0 0 15px rgba(0,212,255,0.3); }
+        .data-table th { background:rgba(37,99,235,0.08); color:var(--primary); padding:12px 15px; text-align:left; font-weight:600; }
+        .data-table td { padding:11px 15px; border-bottom:1px solid var(--border); color:var(--text); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .data-table tr:hover td { background:rgba(37,99,235,0.03); }
+        .badge { background:rgba(37,99,235,0.08); color:var(--primary); padding:4px 12px; border-radius:16px; font-size:0.8em; border:1px solid rgba(37,99,235,0.15); transition:all .2s ease; }
+        .badge:hover { background:rgba(37,99,235,0.15); }
         .compare-section { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:20px; }
-        .compare-card { background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(124,58,237,0.06)); border:1px solid var(--border); border-radius:18px; padding:25px; text-align:center; transition:all .3s ease; }
-        .compare-card:hover { transform:translateY(-3px); border-color:var(--primary); }
-        .compare-value { font-size:3em; font-weight:700; margin-bottom:8px; text-shadow:0 0 20px rgba(0,212,255,0.3); }
+        .compare-card { background:var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:25px; text-align:center; transition:all .3s ease; }
+        .compare-card:hover { transform:translateY(-3px); border-color:var(--primary); box-shadow:var(--shadow); }
+        .compare-value { font-size:3em; font-weight:700; margin-bottom:8px; }
         .compare-label { color:var(--text-muted); font-size:0.9em; margin-bottom:5px; }
         .compare-change { font-size:1.1em; font-weight:600; }
-        .compare-change.up { color:#f87171; }
-        .compare-change.down { color:#4ade80; }
+        .compare-change.up { color:#dc2626; }
+        .compare-change.down { color:#16a34a; }
         .trend-icon { font-size:1.5em; margin-bottom:10px; }
-        .footer { text-align:center; color:#64748b; margin-top:40px; font-size:0.85em; padding:20px; border-top:1px solid rgba(255,255,255,0.05); }
+        .footer { text-align:center; color:var(--text-muted); margin-top:40px; font-size:0.85em; padding:20px; border-top:1px solid var(--border); }
         @media (max-width:768px) {
             body { padding:10px; }
             .stats-grid { grid-template-columns:repeat(3,1fr); gap:12px; }
@@ -128,7 +147,8 @@
     <div class="container">
         <div class="header">
             <h1>🛡️ HFish 威胁情报监控中心</h1>
-            <p class="subtitle">📊 监控周期: 2026-02-14 14:30 ~ 2026-05-15 14:30 | 最后更新: 2026-05-15 14:30:39</p>
+            <p class="subtitle">📊 监控周期: 2026-02-14 14:50 ~ 2026-05-15 14:50 | 最后更新: 2026-05-15 14:50:26</p>
+            <span class="ai-badge">🤖 AI 辅助生成 · 威胁情报分析</span>
         </div>
 
         <div class="stats-grid">
@@ -1125,7 +1145,7 @@
         </div>
 
         <div class="footer">
-            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-15 14:30:39</p>
+            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | 2026-05-15 14:50:26</p>
         </div>
     </div>
 
@@ -1134,28 +1154,28 @@
         const trendCtx = document.getElementById('attackTrendChart').getContext('2d');
         const trendData = {"dates": ["04-29", "04-30"], "counts": [1468, 3532], "prev_counts": []};
         const gradient = trendCtx.createLinearGradient(0,0,0,400);
-        gradient.addColorStop(0,'rgba(0,212,255,0.3)');
-        gradient.addColorStop(1,'rgba(0,212,255,0)');
+        gradient.addColorStop(0,'rgba(37,99,235,0.25)');
+        gradient.addColorStop(1,'rgba(37,99,235,0)');
         const prevGradient = trendCtx.createLinearGradient(0,0,0,400);
-        prevGradient.addColorStop(0,'rgba(124,58,237,0.2)');
+        prevGradient.addColorStop(0,'rgba(124,58,237,0.15)');
         prevGradient.addColorStop(1,'rgba(124,58,237,0)');
         new Chart(trendCtx, {
             type:'line', data:{
                 labels:trendData.dates||[],
                 datasets:[
-                    {label:'本周攻击',data:trendData.counts||[],borderColor:'#00d4ff',backgroundColor:gradient,fill:true,tension:0.4,pointBackgroundColor:'#00d4ff',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,pointHoverRadius:9},
+                    {label:'本周攻击',data:trendData.counts||[],borderColor:'#2563eb',backgroundColor:gradient,fill:true,tension:0.4,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,pointHoverRadius:9},
                     {label:'上周攻击',data:trendData.prev_counts||[],borderColor:'#7c3aed',backgroundColor:prevGradient,fill:true,tension:0.4,borderDash:[5,5],pointBackgroundColor:'#7c3aed',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,pointHoverRadius:8}
                 ]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
                 interaction:{mode:'index',intersect:false},
                 plugins:{
-                    legend:{position:'top',labels:{color:'#94a3b8',font:{size:13},padding:20,usePointStyle:true,pointStyle:'circle'}},
-                    tooltip:{backgroundColor:'rgba(15,23,42,0.95)',titleColor:'#00d4ff',bodyColor:'#e2e8f0',borderColor:'rgba(0,212,255,0.3)',borderWidth:1,padding:12}
+                    legend:{position:'top',labels:{color:'#64748b',font:{size:13},padding:20,usePointStyle:true,pointStyle:'circle'}},
+                    tooltip:{backgroundColor:'#ffffff',titleColor:'#2563eb',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,padding:12,boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}
                 },
                 scales:{
-                    x:{ticks:{color:'#94a3b8',font:{size:12}},grid:{color:'rgba(255,255,255,0.05)',drawBorder:false}},
-                    y:{ticks:{color:'#94a3b8',font:{size:12}},grid:{color:'rgba(255,255,255,0.05)',drawBorder:false},beginAtZero:true}
+                    x:{ticks:{color:'#64748b',font:{size:12}},grid:{color:'rgba(0,0,0,0.05)',drawBorder:false}},
+                    y:{ticks:{color:'#64748b',font:{size:12}},grid:{color:'rgba(0,0,0,0.05)',drawBorder:false},beginAtZero:true}
                 },
                 animation:{duration:1500,easing:'easeOutQuart'}
             }
@@ -1164,17 +1184,17 @@
         // --- 2. 热力图 ---
         const heatCtx = document.getElementById('heatmapChart').getContext('2d');
         const heatData = [633, 2094, 805, 0, 0, 0, 0, 16, 12, 16, 43, 109, 25, 9, 47, 88, 109, 128, 125, 141, 123, 184, 122, 171];
-        const barColors = heatData.map(v => v>200?'#7c3aed':v>100?'#00d4ff':v>50?'#0284c7':v>20?'#0d47a1':'#1e293b');
+        const barColors = heatData.map(v => v>200?'#7c3aed':v>100?'#2563eb':v>50?'#0891b2':v>20?'#3b82f6':'#94a3b8');
         new Chart(heatCtx, {
             type:'bar', data:{
                 labels:Array.from({length:24},(_,i)=>i+':00'),
                 datasets:[{label:'攻击次数',data:heatData,backgroundColor:barColors,borderColor:barColors.map(c=>c),borderWidth:1,borderRadius:8,borderSkipped:false}]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
-                plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,0.95)',titleColor:'#00d4ff',bodyColor:'#e2e8f0',borderColor:'rgba(0,212,255,0.3)',borderWidth:1,padding:12}},
+                plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#2563eb',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,padding:12}},
                 scales:{
-                    x:{ticks:{color:'#94a3b8',font:{size:11},maxRotation:45,minRotation:45},grid:{display:false}},
-                    y:{ticks:{color:'#94a3b8',font:{size:12}},grid:{color:'rgba(255,255,255,0.05)',drawBorder:false},beginAtZero:true}
+                    x:{ticks:{color:'#64748b',font:{size:11},maxRotation:45,minRotation:45},grid:{display:false}},
+                    y:{ticks:{color:'#64748b',font:{size:12}},grid:{color:'rgba(0,0,0,0.05)',drawBorder:false},beginAtZero:true}
                 },
                 animation:{duration:1200,easing:'easeOutQuart'}
             }
@@ -1185,13 +1205,13 @@
         new Chart(compareCtx, {
             type:'bar', data:{
                 labels:['本周','上周'],
-                datasets:[{label:'攻击次数',data:[5000,0],backgroundColor:['#00d4ff','#7c3aed'],borderColor:['#00d4ff','#7c3aed'],borderWidth:2,borderRadius:12,barThickness:60}]
+                datasets:[{label:'攻击次数',data:[5000,0],backgroundColor:['#2563eb','#7c3aed'],borderColor:['#2563eb','#7c3aed'],borderWidth:2,borderRadius:12,barThickness:60}]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
-                plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,0.95)',titleColor:'#00d4ff',bodyColor:'#e2e8f0',borderColor:'rgba(0,212,255,0.3)',borderWidth:1,padding:12}},
+                plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#2563eb',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,padding:12}},
                 scales:{
-                    x:{ticks:{color:'#94a3b8',font:{size:14,weight:'600'}},grid:{display:false}},
-                    y:{ticks:{color:'#94a3b8',font:{size:12}},grid:{color:'rgba(255,255,255,0.05)',drawBorder:false},beginAtZero:true}
+                    x:{ticks:{color:'#64748b',font:{size:14,weight:'600'}},grid:{display:false}},
+                    y:{ticks:{color:'#64748b',font:{size:12}},grid:{color:'rgba(0,0,0,0.05)',drawBorder:false},beginAtZero:true}
                 },
                 animation:{duration:1000,easing:'easeOutQuart'}
             }
@@ -1222,16 +1242,16 @@
             new Chart(ctx, {
                 type:'bar', data:{
                     labels:sorted.map(c=>countryNameMap[c.name]||c.name),
-                    datasets:[{label:'攻击次数',data:sorted.map(c=>c.value),backgroundColor:'rgba(0,212,255,0.7)',borderColor:'#00d4ff',borderWidth:1,borderRadius:6}]
+                    datasets:[{label:'攻击次数',data:sorted.map(c=>c.value),backgroundColor:'rgba(37,99,235,0.6)',borderColor:'#2563eb',borderWidth:1,borderRadius:6}]
                 }, options:{
                     responsive:true, maintainAspectRatio:false, indexAxis:'y',
                     plugins:{
                         legend:{display:false},
-                        title:{display:true,text:'攻击来源 TOP 15 国家/地区',color:'#94a3b8',font:{size:14}}
+                        title:{display:true,text:'攻击来源 TOP 15 国家/地区',color:'#64748b',font:{size:14}}
                     },
                     scales:{
-                        x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
-                        y:{ticks:{color:'#94a3b8'},grid:{display:false}}
+                        x:{ticks:{color:'#64748b'},grid:{color:'rgba(0,0,0,0.05)'}},
+                        y:{ticks:{color:'#64748b'},grid:{display:false}}
                     }
                 }
             });
