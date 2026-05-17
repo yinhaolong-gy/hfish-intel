@@ -69,6 +69,7 @@ def fetch_attack_logs(start_ts, end_ts):
             "page_size": PAGE_SIZE,
         },
         desc="单实例攻击日志",
+        max_pages=10,
     )
 
 
@@ -99,6 +100,7 @@ def fetch_all_attack_logs(start_ts, end_ts):
                 "end_time": int(end_ts.timestamp()),
                 "page_size": PAGE_SIZE,
             },
+            max_pages=10,
         )
         for d in data:
             key = (d.get("attack_ip", ""), d.get("create_time", ""))
