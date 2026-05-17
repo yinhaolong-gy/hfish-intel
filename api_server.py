@@ -76,7 +76,7 @@ class ReportAPIHandler(BaseHTTPRequestHandler):
                 return
 
             df, stats = process_data(logs, start_time=start_time, end_time=end_time)
-            week_compare = compare_weeks(df, last_week_logs)
+            week_compare = compare_weeks(df, last_week_logs, end_time=end_time)
             map_data = generate_map_data(df)
 
             export_csv(df)

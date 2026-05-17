@@ -7,6 +7,8 @@ HFish 威胁情报报告 — 数据处理与统计模块
 """
 
 import json
+from datetime import datetime, timedelta
+
 import pandas as pd
 
 from config import START_TIME, END_TIME
@@ -116,17 +118,17 @@ def generate_map_data(df):
 
 
 def gen_chart_data(df):
-    """生成近7天攻击趋势图数据"""
+    """生成近7天攻击趋势图数据（基于数据实际日期的日历周对齐）"""
     if "date" not in df.columns or df.empty:
         return json.dumps({"dates": [], "counts": [], "prev_counts": []})
 
     daily_counts = df.groupby("date")["attack_ip"].count()
-    recent_dates = sorted(daily_counts.index)[-14:]
+    ref_date = max(daily_counts.index)
 
-    this_week_dates = recent_dates[-7:]
+    this_week_dates = [ref_date - timedelta(days=i) for i in range(6, -1, -1)]
+    last_week_dates = [ref_date - timedelta(days=i) for i in range(13, 6, -1)]
+
     this_week_counts = [int(daily_counts.get(d, 0)) for d in this_week_dates]
-
-    last_week_dates = recent_dates[:7] if len(recent_dates) >= 14 else []
     last_week_counts = [int(daily_counts.get(d, 0)) for d in last_week_dates]
 
     date_labels = [d.strftime("%m-%d") for d in this_week_dates]
@@ -138,9 +140,25 @@ def gen_chart_data(df):
     })
 
 
-def compare_weeks(current_df, last_week_logs):
-    """本周与上周攻击数据对比"""
-    current_count = len(current_df)
+def compare_weeks(current_df, last_week_logs, end_time=None):
+    """本周（近7天）与上周攻击数据对比
+
+    参数:
+        current_df: 当前时段攻击数据 DataFrame
+        last_week_logs: 上周原始攻击日志列表
+        end_time: 当前周期结束时间（默认使用 current_df 的最大日期）
+    """
+    if end_time is None:
+        end_time = datetime.now()
+
+    # 只取当前数据中最近7天用于对比
+    if "date" in current_df.columns:
+        week_ago = end_time.date() - timedelta(days=7)
+        recent_df = current_df[current_df["date"] >= week_ago]
+        current_count = len(recent_df)
+    else:
+        current_count = len(current_df)
+
     last_count = len(last_week_logs)
     change = current_count - last_count
 
