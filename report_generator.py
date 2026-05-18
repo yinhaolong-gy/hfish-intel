@@ -59,7 +59,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFish 威胁情报监控中心</title>
+    <title>ThreatWatch 威胁监控中心</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
@@ -201,7 +201,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛡️ HFish 威胁情报监控中心</h1>
+            <h1>🛡️ ThreatWatch 威胁监控中心</h1>
             <p class="subtitle">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
             <span class="ai-badge">🤖 AI 辅助生成 · 威胁情报分析</span>
         </div>
