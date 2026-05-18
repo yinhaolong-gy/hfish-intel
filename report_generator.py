@@ -16,6 +16,31 @@ from jinja2 import Template
 from config import OUTPUT_DIR
 from data_analyzer import gen_chart_data
 
+SNAPSHOT_FILE = "weekly_snapshot.json"
+
+def load_weekly_snapshot(output_dir=None):
+    path = os.path.join(output_dir or OUTPUT_DIR, SNAPSHOT_FILE)
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return None
+
+def save_weekly_snapshot(attack_count, unique_ips, output_dir=None):
+    path = os.path.join(output_dir or OUTPUT_DIR, SNAPSHOT_FILE)
+    os.makedirs(os.path.dirname(path) or output_dir or OUTPUT_DIR, exist_ok=True)
+    snapshot = {
+        "count": int(attack_count),
+        "ips": int(unique_ips),
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(snapshot, f, ensure_ascii=False, indent=2)
+    print(f"  📸 本周快照已保存: {attack_count} 条 ({unique_ips} IP)")
+
+
 
 def export_csv(df):
     """导出攻击数据为CSV文件"""
@@ -102,7 +127,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         .header .subtitle { color: rgba(255,255,255,0.8); font-size:0.9em; letter-spacing:1px; position:relative; }
-        .header .ai-badge {
+        .header .update-badge {
             display: inline-block; margin-top: 12px;
             background: rgba(255,255,255,0.15); color: #fff;
             padding: 4px 14px; border-radius: 20px; font-size: 0.75em;
@@ -203,7 +228,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         <div class="header">
             <h1>🛡️ ThreatWatch 威胁监控中心</h1>
             <p class="subtitle">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
-            <span class="ai-badge">🤖 威胁情报分析</span>
+            <span class="update-badge">HFish 蜜罐系统 · 自动采集</span>
         </div>
 
         <div class="stats-grid">
@@ -322,7 +347,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         </div>
 
         <div class="footer">
-            <p>🤖 HFish 蜜罐系统自动采集 | 每6小时更新 | 毕业设计作品 | {{ last_update }}</p>
+            <p>HFish 蜜罐系统自动采集 | 每6小时更新 | {{ last_update }}</p>
         </div>
     </div>
 
