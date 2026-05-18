@@ -203,7 +203,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         <div class="header">
             <h1>🛡️ ThreatWatch 威胁监控中心</h1>
             <p class="subtitle">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
-            <span class="ai-badge">🤖 AI 辅助生成 · 威胁情报分析</span>
+            <span class="ai-badge">🤖 威胁情报分析</span>
         </div>
 
         <div class="stats-grid">
