@@ -259,9 +259,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             <h2 class="section-title">周期攻击量环比分析</h2>
             <div class="compare-section">
                 <div class="compare-card"><div class="compare-value" style="color:var(--primary);">{{ week_compare.current }}</div><div class="compare-label">本周期攻击次数</div></div>
-                <div class="compare-card"><div class="trend-icon">📉</div><div class="compare-value" style="color:var(--text-muted);">{{ week_compare.last }}</div><div class="compare-label">上周期攻击次数</div></div>
                 <div class="compare-card">
-                    <div class="trend-icon">{{ '↑' if week_compare.trend == '上升' else '↓' if week_compare.trend == '下降' else '→' }}</div>
                     <div class="compare-value {{ 'up' if week_compare.trend == '上升' else 'down' if week_compare.trend == '下降' else '' }}">
                         {{ week_compare.change }}{% if week_compare.change > 0 %}+{% endif %}
                     </div>
