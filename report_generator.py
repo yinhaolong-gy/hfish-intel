@@ -58,7 +58,7 @@ def export_csv(df):
 def generate_html(df, stats, accounts, week_compare, map_data):
     """生成完整的威胁情报HTML页面"""
 
-    chart_data = gen_chart_data(df)
+    chart_data = gen_chart_data(df, end_date=datetime.now().date())
     heatmap_list = stats.get("heatmap_data", [0] * 24)
     heatmap_data = json.dumps([int(x) if hasattr(x, 'item') else x for x in heatmap_list])
 

@@ -117,13 +117,13 @@ def generate_map_data(df):
     return json.dumps({"countries": countries, "maxCount": max_count}, ensure_ascii=False)
 
 
-def gen_chart_data(df):
+def gen_chart_data(df, end_date=None):
     """生成近7天攻击趋势图数据（基于数据实际日期的日历周对齐）"""
     if "date" not in df.columns or df.empty:
         return json.dumps({"dates": [], "counts": [], "prev_counts": []})
 
     daily_counts = df.groupby("date")["attack_ip"].count()
-    ref_date = max(daily_counts.index)
+    ref_date = end_date or max(daily_counts.index)
 
     this_week_dates = [ref_date - timedelta(days=i) for i in range(6, -1, -1)]
     last_week_dates = [ref_date - timedelta(days=i) for i in range(13, 6, -1)]
@@ -140,7 +140,7 @@ def gen_chart_data(df):
     })
 
 
-def compare_weeks(current_df, last_week_logs, end_time=None):
+def compare_weeks(current_df, last_week_logs, end_time=None, fallback_last_count=0):
     """本周（近7天）与上周攻击数据对比
 
     参数:
@@ -160,6 +160,8 @@ def compare_weeks(current_df, last_week_logs, end_time=None):
         current_count = len(current_df)
 
     last_count = len(last_week_logs)
+    if last_count == 0 and fallback_last_count > 0:
+        last_count = fallback_last_count
     change = current_count - last_count
 
     if last_count == 0:
