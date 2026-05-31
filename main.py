@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from config import START_TIME, END_TIME, LAST_WEEK_START, LAST_WEEK_END, DAYS_RANGE
 from data_collector import fetch_attack_logs, fetch_accounts, fetch_all_attack_logs, fetch_all_accounts
 from data_analyzer import process_data, compare_weeks, generate_map_data
-from report_generator import export_csv, generate_html
+from report_generator import export_csv, generate_html, load_weekly_snapshot, save_weekly_snapshot
 
 
 def parse_args(argv=None):
@@ -68,12 +68,18 @@ def main():
             print(f"📥 攻击数据: {len(logs)} 条 | 账号数据: {len(accounts)} 条"
                   f" | 上周数据: {len(last_week_logs)} 条")
 
+        snapshot = load_weekly_snapshot()
         df, stats = process_data(logs, start_time=start_time, end_time=end_time)
-        week_compare = compare_weeks(df, last_week_logs, end_time=end_time)
+
+        if last_week_logs or snapshot:
+            week_compare = compare_weeks(df, last_week_logs, end_time=end_time, fallback_last_count=snapshot.get("count", 0) if snapshot else 0)
+        else:
+            week_compare = compare_weeks(df, last_week_logs, end_time=end_time)
         map_data = generate_map_data(df)
 
         export_csv(df)
         generate_html(df, stats, accounts, week_compare, map_data)
+        save_weekly_snapshot(attack_count=len(df), unique_ips=stats.get("unique_ips", 0))
 
         if not args.quiet:
             print("✨ 所有任务完成！")
