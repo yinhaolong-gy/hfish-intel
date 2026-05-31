@@ -358,15 +358,11 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         const gradient = trendCtx.createLinearGradient(0,0,0,400);
         gradient.addColorStop(0,'rgba(37,99,235,0.25)');
         gradient.addColorStop(1,'rgba(37,99,235,0)');
-        const prevGradient = trendCtx.createLinearGradient(0,0,0,400);
-        prevGradient.addColorStop(0,'rgba(124,58,237,0.15)');
-        prevGradient.addColorStop(1,'rgba(124,58,237,0)');
         new Chart(trendCtx, {
             type:'line', data:{
                 labels:trendData.dates||[],
                 datasets:[
-                    {label:'本周攻击',data:trendData.counts||[],borderColor:'#2563eb',backgroundColor:gradient,fill:true,tension:0.4,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,pointHoverRadius:9},
-                    {label:'上周攻击',data:trendData.prev_counts||[],borderColor:'#7c3aed',backgroundColor:prevGradient,fill:true,tension:0.4,borderDash:[5,5],pointBackgroundColor:'#7c3aed',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,pointHoverRadius:8}
+                    {label:'攻击量',data:trendData.counts||[],borderColor:'#2563eb',backgroundColor:gradient,fill:true,tension:0.4,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,pointHoverRadius:9},
                 ]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
