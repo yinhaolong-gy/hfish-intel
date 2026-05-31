@@ -84,7 +84,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThreatWatch 威胁监控中心</title>
+    <title>自动化威胁情报采集与分析系统</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
@@ -226,46 +226,46 @@ def generate_html(df, stats, accounts, week_compare, map_data):
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛡️ ThreatWatch 威胁监控中心</h1>
-            <p class="subtitle">📊 监控周期: {{ stats.time_range }} | 最后更新: {{ last_update }}</p>
-            <span class="update-badge">HFish 蜜罐系统 · 自动采集</span>
+            <h1>自动化威胁情报采集与分析系统</h1>
+            <p class="subtitle">数据采集周期: {{ stats.time_range }} | 报告生成时间: {{ last_update }}</p>
+            <span class="update-badge">基于 HFish 蜜罐 · 自动化威胁情报采集</span>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number">{{ stats.total_attacks }}</div><div class="stat-label">总攻击次数</div></div>
-            <div class="stat-card"><div class="stat-number">{{ stats.unique_ips }}</div><div class="stat-label">独立攻击IP</div></div>
-            <div class="stat-card"><div class="stat-number">{{ account_count }}</div><div class="stat-label">账号资产数据</div></div>
-            <div class="stat-card"><div class="stat-number">{{ stats.active_honeypots }}</div><div class="stat-label">活跃蜜罐数</div></div>
-            <div class="stat-card"><div class="stat-number">{{ week_compare.current }}</div><div class="stat-label">本周攻击</div></div>
+            <div class="stat-card"><div class="stat-number">{{ stats.total_attacks }}</div><div class="stat-label">有效攻击事件总数</div></div>
+            <div class="stat-card"><div class="stat-number">{{ stats.unique_ips }}</div><div class="stat-label">独立攻击源 IP</div></div>
+            <div class="stat-card"><div class="stat-number">{{ account_count }}</div><div class="stat-label">采集账号口令记录</div></div>
+            <div class="stat-card"><div class="stat-number">{{ stats.active_honeypots }}</div><div class="stat-label">活跃蜜罐节点</div></div>
+            <div class="stat-card"><div class="stat-number">{{ week_compare.current }}</div><div class="stat-label">本周期攻击次数</div></div>
             <div class="stat-card">
                 <div class="stat-number {{ 'up' if week_compare.trend == '上升' else 'down' if week_compare.trend == '下降' else '' }}">
                     {{ week_compare.change }}{% if week_compare.change > 0 %}+{% endif %}
                 </div>
-                <div class="stat-label">较上周{{ week_compare.trend }}</div>
+                <div class="stat-label">较上周期{{ week_compare.trend }}</div>
             </div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">📈 攻击趋势分析（近7天）</h2>
+            <h2 class="section-title">攻击趋势分析（近 7 天）</h2>
             <div class="chart-container"><canvas id="attackTrendChart"></canvas></div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">🔥 攻击时段热力图（24小时）</h2>
+            <h2 class="section-title">攻击时段分布（24 小时）</h2>
             <div class="heatmap-container"><canvas id="heatmapChart"></canvas></div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">📊 本周 vs 上周攻击对比</h2>
+            <h2 class="section-title">周期攻击量环比分析</h2>
             <div class="compare-section">
-                <div class="compare-card"><div class="trend-icon">📊</div><div class="compare-value" style="color:var(--primary);">{{ week_compare.current }}</div><div class="compare-label">本周攻击次数</div></div>
-                <div class="compare-card"><div class="trend-icon">📉</div><div class="compare-value" style="color:var(--text-muted);">{{ week_compare.last }}</div><div class="compare-label">上周攻击次数</div></div>
+                <div class="compare-card"><div class="compare-value" style="color:var(--primary);">{{ week_compare.current }}</div><div class="compare-label">本周期攻击次数</div></div>
+                <div class="compare-card"><div class="trend-icon">📉</div><div class="compare-value" style="color:var(--text-muted);">{{ week_compare.last }}</div><div class="compare-label">上周期攻击次数</div></div>
                 <div class="compare-card">
-                    <div class="trend-icon">{{ '📈' if week_compare.trend == '上升' else '📉' if week_compare.trend == '下降' else '➡️' }}</div>
+                    <div class="trend-icon">{{ '↑' if week_compare.trend == '上升' else '↓' if week_compare.trend == '下降' else '→' }}</div>
                     <div class="compare-value {{ 'up' if week_compare.trend == '上升' else 'down' if week_compare.trend == '下降' else '' }}">
                         {{ week_compare.change }}{% if week_compare.change > 0 %}+{% endif %}
                     </div>
-                    <div class="compare-label">数量变化</div>
+                    <div class="compare-label">环比变化量</div>
                     {% if week_compare.last > 0 %}
                     <div class="compare-change {{ 'up' if week_compare.trend == '上升' else 'down' if week_compare.trend == '下降' else '' }}">
                         {{ week_compare.change_percent }}{% if week_compare.change_percent > 0 %}+{% endif %}%
@@ -277,12 +277,12 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         </div>
 
         <div class="section">
-            <h2 class="section-title">🗺️ 攻击来源分布</h2>
+            <h2 class="section-title">攻击来源地理分布</h2>
             <div class="map-container" id="worldMap"></div>
         </div>
 
         <div class="section">
-            <h2 class="section-title">🎯 各蜜罐受攻击次数</h2>
+            <h2 class="section-title">蜜罐节点攻击量统计</h2>
             <div class="honeypot-grid">
                 {% for name, count in stats.honeypot_data.items() %}
                 <div class="hp-item"><div class="hp-name">{{ name }}</div><div class="hp-count {% if count == 0 %}hp-zero{% endif %}">{{ count }}</div></div>
@@ -291,34 +291,34 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         </div>
 
         <div class="section">
-            <h2 class="section-title">📊 攻击统计详情</h2>
+            <h2 class="section-title">攻击数据多维统计</h2>
             <div class="top-list">
                 <div class="list-item">
-                    <h3>🔝 Top 10 攻击源IP</h3>
+                    <h3>攻击源 IP Top 10</h3>
                     {% for ip, count in stats.top_ips.items() %}
                     <div class="rank-item"><span title="{{ ip }}">{{ ip }}</span><span class="rank-value">{{ count }}次</span></div>
                     {% endfor %}
                 </div>
                 <div class="list-item">
-                    <h3>🌍 攻击来源国家</h3>
+                    <h3>攻击来源国家/地区 Top 10</h3>
                     {% for country, count in stats.top_countries.items() %}
                     <div class="rank-item"><span>{{ country }}</span><span class="rank-value">{{ count }}次</span></div>
                     {% endfor %}
                 </div>
                 <div class="list-item">
-                    <h3>🔑 弱口令 TOP 10</h3>
+                    <h3>弱口令爆破字典 Top 10</h3>
                     {% for pwd, count in top_passwords %}
                     <div class="rank-item"><span class="warning">{{ pwd }}</span><span class="rank-value">{{ count }}次</span></div>
                     {% endfor %}
                 </div>
                 <div class="list-item">
-                    <h3>👤 高频用户名 TOP 5</h3>
+                    <h3>👤 高频攻击用户名 Top 5</h3>
                     {% for user, count in top_usernames %}
                     <div class="rank-item"><span>{{ user }}</span><span class="rank-value">{{ count }}次</span></div>
                     {% endfor %}
                 </div>
                 <div class="list-item">
-                    <h3>🔌 热门攻击端口</h3>
+                    <h3>目标端口分布 Top 10</h3>
                     {% for port, count in stats.top_ports.items() %}
                     <div class="rank-item"><span>端口 {{ port }}</span><span class="rank-value">{{ count }}次</span></div>
                     {% endfor %}
@@ -327,7 +327,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         </div>
 
         <div class="section">
-            <h2 class="section-title">📋 最新攻击详情记录（前100条）</h2>
+            <h2 class="section-title">最新攻击事件记录（前 100 条）</h2>
             <div style="overflow-x:auto;max-height:400px;overflow-y:auto;">
                 <table class="data-table">
                     <thead><tr><th>攻击源IP</th><th>地理位置</th><th>服务类型</th><th>端口</th><th>攻击时间</th></tr></thead>
@@ -362,7 +362,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             type:'line', data:{
                 labels:trendData.dates||[],
                 datasets:[
-                    {label:'攻击量',data:trendData.counts||[],borderColor:'#2563eb',backgroundColor:gradient,fill:true,tension:0.4,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,pointHoverRadius:9},
+                    {label:'攻击事件数量',data:trendData.counts||[],borderColor:'#2563eb',backgroundColor:gradient,fill:true,tension:0.4,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,pointHoverRadius:9},
                 ]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
@@ -386,7 +386,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         new Chart(heatCtx, {
             type:'bar', data:{
                 labels:Array.from({length:24},(_,i)=>i+':00'),
-                datasets:[{label:'攻击次数',data:heatData,backgroundColor:barColors,borderColor:barColors.map(c=>c),borderWidth:1,borderRadius:8,borderSkipped:false}]
+                datasets:[{label:'攻击事件数量',data:heatData,backgroundColor:barColors,borderColor:barColors.map(c=>c),borderWidth:1,borderRadius:8,borderSkipped:false}]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
                 plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#2563eb',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,padding:12}},
@@ -403,7 +403,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
         new Chart(compareCtx, {
             type:'bar', data:{
                 labels:['本周','上周'],
-                datasets:[{label:'攻击次数',data:[{{ week_compare.current }},{{ week_compare.last }}],backgroundColor:['#2563eb','#7c3aed'],borderColor:['#2563eb','#7c3aed'],borderWidth:2,borderRadius:12,barThickness:60}]
+                datasets:[{label:'攻击事件数量',data:[{{ week_compare.current }},{{ week_compare.last }}],backgroundColor:['#2563eb','#7c3aed'],borderColor:['#2563eb','#7c3aed'],borderWidth:2,borderRadius:12,barThickness:60}]
             }, options:{
                 responsive:true, maintainAspectRatio:false,
                 plugins:{legend:{display:false},tooltip:{backgroundColor:'#ffffff',titleColor:'#2563eb',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,padding:12}},
@@ -440,7 +440,7 @@ def generate_html(df, stats, accounts, week_compare, map_data):
             new Chart(ctx, {
                 type:'bar', data:{
                     labels:sorted.map(c=>countryNameMap[c.name]||c.name),
-                    datasets:[{label:'攻击次数',data:sorted.map(c=>c.value),backgroundColor:'rgba(37,99,235,0.6)',borderColor:'#2563eb',borderWidth:1,borderRadius:6}]
+                    datasets:[{label:'攻击事件数量',data:sorted.map(c=>c.value),backgroundColor:'rgba(37,99,235,0.6)',borderColor:'#2563eb',borderWidth:1,borderRadius:6}]
                 }, options:{
                     responsive:true, maintainAspectRatio:false, indexAxis:'y',
                     plugins:{
