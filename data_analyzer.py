@@ -118,12 +118,14 @@ def generate_map_data(df):
 
 
 def gen_chart_data(df, end_date=None):
+    if end_date is None:
+        end_date = datetime.now().date()
     """生成近7天攻击趋势图数据（基于数据实际日期的日历周对齐）"""
     if "date" not in df.columns or df.empty:
         return json.dumps({"dates": [], "counts": [], "prev_counts": []})
 
     daily_counts = df.groupby("date")["attack_ip"].count()
-    ref_date = end_date or max(daily_counts.index)
+    ref_date = end_date
 
     this_week_dates = [ref_date - timedelta(days=i) for i in range(6, -1, -1)]
     last_week_dates = [ref_date - timedelta(days=i) for i in range(13, 6, -1)]
